@@ -36,7 +36,7 @@ function Contact() {
       </div>
 
       <a
-        href="http://localhost:5173/"
+        href="https://website-warih-sam.vercel.app/"
         className="store-link"
       >
         <span>VISIT WS FASHION</span>
