@@ -1,0 +1,772 @@
+:root {
+  --black: #101010;
+  --white: #f4f3ef;
+  --gray: #a4a4a0;
+  --line: rgba(16, 16, 16, 0.2);
+  --dark-line: rgba(244, 243, 239, 0.2);
+}
+
+body {
+  overflow-x: hidden;
+}
+
+/* ==============================
+   NAVBAR
+============================== */
+
+.navbar {
+  position: fixed;
+  z-index: 1000;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 76px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 0 5vw;
+
+  background: rgba(244, 243, 239, 0.92);
+  backdrop-filter: blur(12px);
+
+  border-bottom: 1px solid var(--line);
+}
+
+.nav-logo {
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -1px;
+}
+
+.nav-logo span {
+  color: #777;
+}
+
+.nav-links {
+  display: flex;
+  gap: 30px;
+}
+
+.nav-links a {
+  display: flex;
+  gap: 7px;
+
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.nav-links a span {
+  color: #999;
+}
+
+.nav-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  font-size: 10px;
+  letter-spacing: 1px;
+}
+
+.nav-status span {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #111;
+}
+
+.mobile-menu {
+  display: none;
+  border: 0;
+  background: none;
+}
+
+/* ==============================
+   HERO
+============================== */
+
+.hero {
+  min-height: 100vh;
+
+  padding: 130px 5vw 45px;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+
+  background: var(--white);
+}
+
+.hero-top,
+.hero-bottom {
+  display: flex;
+  justify-content: space-between;
+
+  font-family: "DM Mono", monospace;
+  font-size: 10px;
+  letter-spacing: 1px;
+}
+
+.hero-content {
+  display: grid;
+  grid-template-columns: 1.5fr 0.7fr;
+  align-items: center;
+  gap: 5vw;
+}
+
+.eyebrow {
+  margin-bottom: 20px;
+
+  font-family: "DM Mono", monospace;
+  font-size: 12px;
+  letter-spacing: 3px;
+}
+
+.hero-title h1 {
+  font-size: clamp(65px, 11vw, 170px);
+  line-height: 0.8;
+  letter-spacing: -0.08em;
+  font-weight: 600;
+}
+
+.hero-title em,
+.section-heading h2 em,
+.project-header h2 em,
+.contact-section h2 em {
+  font-style: normal;
+  font-weight: 300;
+}
+
+.hero-photo {
+  justify-self: end;
+  width: min(340px, 100%);
+}
+
+.photo-frame {
+  aspect-ratio: 4 / 5;
+  overflow: hidden;
+  background: #ddd;
+}
+
+.photo-frame img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.hero-photo p {
+  margin-top: 12px;
+
+  font-family: "DM Mono", monospace;
+  font-size: 10px;
+  line-height: 1.6;
+}
+
+.hero-bottom {
+  align-items: end;
+}
+
+.hero-bottom div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.hero-bottom span {
+  color: #777;
+}
+
+.scroll-down,
+.hero-project-link {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ==============================
+   GENERIC SECTION
+============================== */
+
+.editorial-section,
+.system-section,
+.learning-section,
+.contact-section,
+.project-section {
+  position: relative;
+
+  padding: 140px 5vw;
+}
+
+.editorial-section.light,
+.learning-section,
+.contact-section {
+  background: var(--white);
+  color: var(--black);
+}
+
+.editorial-section.dark,
+.system-section {
+  background: var(--black);
+  color: var(--white);
+}
+
+.section-number {
+  position: absolute;
+  top: 50px;
+  left: 5vw;
+
+  font-family: "DM Mono", monospace;
+  font-size: 12px;
+}
+
+.section-heading {
+  margin-left: 16%;
+  margin-bottom: 80px;
+}
+
+.section-heading p,
+.section-label {
+  margin-bottom: 15px;
+
+  font-family: "DM Mono", monospace;
+  font-size: 11px;
+  letter-spacing: 2px;
+}
+
+.section-heading h2 {
+  font-size: clamp(55px, 8vw, 120px);
+  line-height: 0.88;
+  letter-spacing: -0.07em;
+  font-weight: 600;
+}
+
+/* ==============================
+   ABOUT
+============================== */
+
+.about-content {
+  max-width: 850px;
+  margin-left: 16%;
+}
+
+.about-content p {
+  max-width: 700px;
+  margin-bottom: 30px;
+
+  font-size: 18px;
+  line-height: 1.7;
+}
+
+.about-content .large-text,
+.industry-content .large-text {
+  font-size: clamp(27px, 3.5vw, 48px);
+  line-height: 1.15;
+  letter-spacing: -0.03em;
+}
+
+/* ==============================
+   BACKGROUND
+============================== */
+
+.background-grid {
+  margin-left: 16%;
+
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10vw;
+}
+
+.big-statement span {
+  font-family: "DM Mono", monospace;
+  font-size: 12px;
+}
+
+.big-statement h3 {
+  margin-top: 25px;
+
+  font-size: clamp(30px, 4vw, 60px);
+  line-height: 1;
+  letter-spacing: -0.05em;
+}
+
+.background-text p {
+  max-width: 500px;
+  margin-bottom: 30px;
+
+  color: #bbb;
+  line-height: 1.7;
+}
+
+/* ==============================
+   PROJECT
+============================== */
+
+.project-section {
+  background: #deddd8;
+}
+
+.project-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: end;
+
+  margin-bottom: 70px;
+}
+
+.project-header h2 {
+  margin-top: 20px;
+
+  font-size: clamp(60px, 10vw, 150px);
+  line-height: 0.8;
+  letter-spacing: -0.08em;
+}
+
+.project-header > p {
+  width: 280px;
+
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.project-image {
+  position: relative;
+
+  width: 100%;
+  min-height: 500px;
+
+  overflow: hidden;
+
+  background: #aaa;
+}
+
+.project-image img {
+  width: 100%;
+  height: 100%;
+  min-height: 500px;
+
+  object-fit: cover;
+}
+
+.image-label {
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+
+  padding: 8px 12px;
+
+  background: #111;
+  color: #fff;
+
+  font-family: "DM Mono", monospace;
+  font-size: 9px;
+}
+
+.project-description {
+  margin-top: 70px;
+
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10vw;
+}
+
+.project-description span {
+  font-family: "DM Mono", monospace;
+  font-size: 10px;
+}
+
+.project-description h3 {
+  margin-top: 20px;
+
+  max-width: 550px;
+
+  font-size: 38px;
+  line-height: 1.05;
+  letter-spacing: -0.04em;
+}
+
+.project-description p {
+  max-width: 500px;
+
+  line-height: 1.7;
+}
+
+/* ==============================
+   TECHNOLOGY
+============================== */
+
+.tech-list {
+  margin-left: 16%;
+  border-top: 1px solid var(--line);
+}
+
+.tech-item {
+  display: grid;
+  grid-template-columns: 70px 1fr 1fr;
+
+  align-items: center;
+
+  padding: 28px 0;
+
+  border-bottom: 1px solid var(--line);
+}
+
+.tech-item > span {
+  font-family: "DM Mono", monospace;
+  font-size: 11px;
+  color: #888;
+}
+
+.tech-item h3 {
+  font-size: 32px;
+  letter-spacing: -0.04em;
+}
+
+.tech-item p {
+  max-width: 400px;
+
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+/* ==============================
+   SYSTEM
+============================== */
+
+.system-flow {
+  margin-left: 16%;
+  border-top: 1px solid var(--dark-line);
+}
+
+.system-step {
+  display: grid;
+  grid-template-columns: 100px 1fr;
+
+  padding: 35px 0;
+
+  border-bottom: 1px solid var(--dark-line);
+}
+
+.system-step > span {
+  font-family: "DM Mono", monospace;
+  color: #777;
+}
+
+.system-step h3 {
+  margin-bottom: 10px;
+
+  font-size: 30px;
+}
+
+.system-step p {
+  max-width: 550px;
+
+  color: #aaa;
+}
+
+/* ==============================
+   RESULT
+============================== */
+
+.result-content {
+  margin-left: 16%;
+
+  display: grid;
+  grid-template-columns: 180px 1fr;
+  gap: 30px;
+}
+
+.result-number {
+  font-size: 100px;
+  letter-spacing: -0.08em;
+  color: #555;
+}
+
+.result-content h3 {
+  max-width: 800px;
+
+  margin-bottom: 30px;
+
+  font-size: clamp(35px, 5vw, 70px);
+  line-height: 1;
+  letter-spacing: -0.05em;
+}
+
+.result-content p {
+  max-width: 550px;
+
+  color: #aaa;
+  line-height: 1.7;
+}
+
+/* ==============================
+   LEARNING
+============================== */
+
+.learning-list {
+  margin-left: 16%;
+
+  border-top: 1px solid var(--line);
+}
+
+.learning-list > div {
+  display: grid;
+  grid-template-columns: 80px 1fr;
+
+  padding: 25px 0;
+
+  border-bottom: 1px solid var(--line);
+}
+
+.learning-list span {
+  font-family: "DM Mono", monospace;
+  color: #888;
+}
+
+.learning-list p {
+  font-size: 25px;
+}
+
+/* ==============================
+   INDUSTRY
+============================== */
+
+.industry-content {
+  margin-left: 16%;
+
+  display: grid;
+  grid-template-columns: 1.3fr 0.7fr;
+  gap: 10vw;
+}
+
+.industry-content p {
+  line-height: 1.7;
+}
+
+/* ==============================
+   CONTACT
+============================== */
+
+.contact-grid {
+  margin-left: 16%;
+
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px;
+
+  margin-bottom: 100px;
+}
+
+.contact-item {
+  display: flex;
+  gap: 20px;
+
+  padding: 25px 0;
+
+  border-top: 1px solid var(--line);
+}
+
+.contact-item svg {
+  width: 20px;
+}
+
+.contact-item span {
+  font-family: "DM Mono", monospace;
+  font-size: 10px;
+  color: #888;
+}
+
+.contact-item p {
+  margin-top: 8px;
+}
+
+.store-link {
+  margin-left: 16%;
+
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  padding: 30px 0;
+
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+
+  font-size: 30px;
+  letter-spacing: -0.03em;
+}
+
+/* ==============================
+   FOOTER
+============================== */
+
+.footer {
+  display: flex;
+  justify-content: space-between;
+
+  padding: 25px 5vw;
+
+  background: #111;
+  color: #fff;
+
+  font-family: "DM Mono", monospace;
+  font-size: 9px;
+  letter-spacing: 1px;
+}
+
+/* ==============================
+   MOBILE
+============================== */
+
+@media (max-width: 800px) {
+  .navbar {
+    height: 65px;
+  }
+
+  .nav-status {
+    display: none;
+  }
+
+  .mobile-menu {
+    display: block;
+  }
+
+  .nav-links {
+    position: absolute;
+
+    top: 65px;
+    left: 0;
+
+    width: 100%;
+
+    display: none;
+    flex-direction: column;
+
+    padding: 25px 5vw;
+
+    background: var(--white);
+
+    border-bottom: 1px solid var(--line);
+  }
+
+  .nav-links.open {
+    display: flex;
+  }
+
+  .hero {
+    min-height: 100svh;
+    padding-top: 100px;
+  }
+
+  .hero-top span:last-child {
+    display: none;
+  }
+
+  .hero-content {
+    grid-template-columns: 1fr;
+  }
+
+  .hero-photo {
+    justify-self: start;
+    width: 180px;
+  }
+
+  .hero-title h1 {
+    font-size: clamp(60px, 18vw, 110px);
+  }
+
+  .hero-bottom {
+    flex-wrap: wrap;
+    gap: 20px;
+  }
+
+  .scroll-down {
+    display: none;
+  }
+
+  .editorial-section,
+  .system-section,
+  .learning-section,
+  .contact-section,
+  .project-section {
+    padding: 110px 5vw 80px;
+  }
+
+  .section-heading,
+  .about-content,
+  .background-grid,
+  .tech-list,
+  .system-flow,
+  .result-content,
+  .learning-list,
+  .industry-content,
+  .contact-grid,
+  .store-link {
+    margin-left: 0;
+  }
+
+  .section-heading {
+    margin-bottom: 50px;
+  }
+
+  .background-grid,
+  .industry-content,
+  .project-description,
+  .contact-grid {
+    grid-template-columns: 1fr;
+    gap: 50px;
+  }
+
+  .project-header {
+    display: block;
+  }
+
+  .project-header > p {
+    margin-top: 30px;
+  }
+
+  .project-image,
+  .project-image img {
+    min-height: 300px;
+  }
+
+  .tech-item {
+    grid-template-columns: 45px 1fr;
+    gap: 15px;
+  }
+
+  .tech-item p {
+    grid-column: 2;
+  }
+
+  .system-step {
+    grid-template-columns: 50px 1fr;
+  }
+
+  .result-content {
+    grid-template-columns: 1fr;
+  }
+
+  .result-number {
+    font-size: 60px;
+  }
+
+  .learning-list > div {
+    grid-template-columns: 45px 1fr;
+  }
+
+  .learning-list p {
+    font-size: 20px;
+  }
+
+  .store-link {
+    font-size: 22px;
+  }
+
+  .footer {
+    flex-direction: column;
+    gap: 10px;
+  }
+}
