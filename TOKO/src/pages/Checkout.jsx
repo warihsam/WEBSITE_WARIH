@@ -111,7 +111,7 @@ const { error: itemError } = await supabase
       .join("\n");
 
     const text = [
-      "Halo WS FASHION 👋",
+      "Halo WS FASHION",
       "",
       "Saya ingin melakukan pemesanan:",
       "",
