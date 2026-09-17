@@ -1,11 +1,12 @@
 /* =========================================================
    WS FASHION
    GLOBAL / MAIN CSS
+   Compatible with AdminDashboard.jsx
 ========================================================= */
 
 
 /* =========================================================
-   BASE
+   1. BASE
 ========================================================= */
 
 :root {
@@ -15,6 +16,9 @@
   --line: #d8d8d2;
   --muted: #777;
   --soft: #ecece7;
+  --card: #fff;
+  --danger: #a22;
+  --success: #247a45;
   --max: 1240px;
 }
 
@@ -44,6 +48,14 @@ button {
   color: inherit;
 }
 
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: 2px solid #111;
+  outline-offset: 2px;
+}
+
 a {
   color: inherit;
   text-decoration: none;
@@ -53,26 +65,10 @@ img {
   max-width: 100%;
 }
 
-.container {
-  width: min(calc(100% - 48px), var(--max));
-  margin: auto;
-}
-
-.eyebrow {
-  margin: 0 0 12px;
-  font-size: 11px;
-  letter-spacing: 0.16em;
-  font-weight: 700;
-}
-
-.muted,
-.stock-text {
-  color: var(--muted);
-}
-
 h1,
 h2,
 h3,
+h4,
 p {
   margin-top: 0;
 }
@@ -99,6 +95,11 @@ h2 em {
   font-weight: 500;
 }
 
+.container {
+  width: min(calc(100% - 48px), var(--max));
+  margin-inline: auto;
+}
+
 .page {
   min-height: 75vh;
 }
@@ -110,57 +111,20 @@ h2 em {
   color: var(--muted);
 }
 
-.button {
-  border: 1px solid var(--black);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  min-height: 50px;
-  padding: 0 22px;
-  cursor: pointer;
-  transition: 0.2s;
+.eyebrow {
+  margin: 0 0 12px;
+  font-size: 11px;
+  letter-spacing: 0.16em;
   font-weight: 700;
 }
 
-.button.dark {
-  background: var(--black);
-  color: #fff;
-}
-
-.button.dark:hover {
-  background: #333;
-  transform: translateY(-1px);
-}
-
-.button.light-button {
-  color: #fff;
-  border-color: #fff;
-}
-
-.button.wide {
-  width: 100%;
-}
-
-.text-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  font-weight: 700;
-  border-bottom: 1px solid #111;
-  padding-bottom: 5px;
-}
-
-.back-link {
-  display: inline-flex;
-  gap: 8px;
-  align-items: center;
-  font-weight: 600;
-  margin-bottom: 42px;
+.muted,
+.stock-text {
+  color: var(--muted);
 }
 
 .empty-state {
-  padding: 50px 0;
+  padding: 50px 20px;
   text-align: center;
   color: var(--muted);
 }
@@ -189,7 +153,96 @@ h2 em {
 
 
 /* =========================================================
-   NAV
+   2. BUTTONS
+========================================================= */
+
+.button,
+.primary-button,
+.secondary-button {
+  border: 1px solid #111;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  min-height: 44px;
+  padding: 0 18px;
+  cursor: pointer;
+  font-weight: 700;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease,
+    opacity 0.2s ease;
+}
+
+.button {
+  min-height: 50px;
+  padding: 0 22px;
+}
+
+.button.dark,
+.primary-button {
+  background: #111;
+  color: #fff;
+}
+
+.button.dark:hover,
+.primary-button:hover {
+  background: #333;
+  border-color: #333;
+  transform: translateY(-1px);
+}
+
+.button.light-button {
+  color: #fff;
+  border-color: #fff;
+}
+
+.button.wide {
+  width: 100%;
+}
+
+.secondary-button {
+  background: #fff;
+  color: #111;
+  border-color: #d8d8d2;
+}
+
+.secondary-button:hover {
+  background: #111;
+  color: #fff;
+  border-color: #111;
+}
+
+.primary-button:disabled,
+.secondary-button:disabled,
+.button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.text-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-weight: 700;
+  border-bottom: 1px solid #111;
+  padding-bottom: 5px;
+}
+
+.back-link {
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+  font-weight: 600;
+  margin-bottom: 42px;
+}
+
+
+/* =========================================================
+   3. NAVBAR
 ========================================================= */
 
 .navbar {
@@ -229,6 +282,7 @@ h2 em {
 .nav-links a {
   font-size: 13px;
   color: #666;
+  transition: color 0.2s ease;
 }
 
 .nav-links a.active,
@@ -277,7 +331,7 @@ h2 em {
 
 
 /* =========================================================
-   HERO
+   4. HERO
 ========================================================= */
 
 .hero {
@@ -344,7 +398,7 @@ h2 em {
 
 
 /* =========================================================
-   SECTIONS
+   5. SECTIONS
 ========================================================= */
 
 .section {
@@ -368,7 +422,7 @@ h2 em {
 
 
 /* =========================================================
-   CATEGORY - PUBLIC
+   6. PUBLIC CATEGORY
 ========================================================= */
 
 .category-grid {
@@ -383,7 +437,9 @@ h2 em {
   border-right: 1px solid var(--line);
   border-bottom: 1px solid var(--line);
   position: relative;
-  transition: 0.2s;
+  transition:
+    background 0.2s ease,
+    transform 0.2s ease;
 }
 
 .category-card:first-child {
@@ -403,7 +459,7 @@ h2 em {
   letter-spacing: -0.05em;
 }
 
-.category-card svg {
+.category-card > svg {
   position: absolute;
   right: 22px;
   top: 22px;
@@ -415,7 +471,7 @@ h2 em {
 
 
 /* =========================================================
-   PRODUCTS
+   7. PRODUCTS
 ========================================================= */
 
 .product-grid {
@@ -441,7 +497,7 @@ h2 em {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: 0.5s;
+  transition: transform 0.5s ease;
 }
 
 .product-image-wrap img.product-image {
@@ -522,7 +578,7 @@ h2 em {
 
 
 /* =========================================================
-   STATEMENT
+   8. STATEMENT
 ========================================================= */
 
 .statement {
@@ -545,7 +601,7 @@ h2 em {
 
 
 /* =========================================================
-   PAGE HERO
+   9. PAGE HERO
 ========================================================= */
 
 .page-hero {
@@ -561,7 +617,7 @@ h2 em {
 
 
 /* =========================================================
-   PRODUCT FILTER
+   10. PRODUCT FILTER
 ========================================================= */
 
 .filter-bar {
@@ -596,9 +652,7 @@ h2 em {
   gap: 12px;
 }
 
-.filter-group select,
-.admin-form select,
-.admin-table select {
+.filter-group select {
   border: 1px solid var(--line);
   background: transparent;
   padding: 10px 12px;
@@ -606,7 +660,7 @@ h2 em {
 
 
 /* =========================================================
-   DETAIL
+   11. PRODUCT DETAIL
 ========================================================= */
 
 .detail-page {
@@ -717,7 +771,7 @@ h2 em {
 
 
 /* =========================================================
-   CART / CHECKOUT
+   12. CART / CHECKOUT
 ========================================================= */
 
 .cart-page,
@@ -840,8 +894,7 @@ h2 em {
   font-size: clamp(44px, 6vw, 75px);
 }
 
-.checkout-form label,
-.admin-form label {
+.checkout-form label {
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -851,9 +904,7 @@ h2 em {
 }
 
 .checkout-form input,
-.checkout-form textarea,
-.admin-form input,
-.admin-form textarea {
+.checkout-form textarea {
   width: 100%;
   border: 0;
   border-bottom: 1px solid #aaa;
@@ -882,7 +933,7 @@ h2 em {
 
 
 /* =========================================================
-   ABOUT / CONTACT
+   13. ABOUT / CONTACT
 ========================================================= */
 
 .about-grid,
@@ -937,7 +988,7 @@ h2 em {
 
 
 /* =========================================================
-   GALLERY
+   14. GALLERY
 ========================================================= */
 
 .gallery-grid {
@@ -975,40 +1026,42 @@ h2 em {
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(
-    to bottom,
-    rgba(0, 0, 0, 0.18),
-    transparent 35%,
-    rgba(0, 0, 0, 0.45)
-  );
+  background:
+    linear-gradient(
+      to bottom,
+      rgba(0, 0, 0, 0.18),
+      transparent 35%,
+      rgba(0, 0, 0, 0.45)
+    );
   pointer-events: none;
 }
 
-.gallery-tile > span {
+.gallery-tile > span,
+.gallery-tile small {
   position: relative;
   z-index: 2;
   color: #fff;
+}
+
+.gallery-tile > span {
   font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.08em;
+}
+
+.gallery-tile small {
+  letter-spacing: 0.12em;
+  font-size: 9px;
+  font-weight: 600;
 }
 
 .gallery-tile b {
   display: none;
 }
 
-.gallery-tile small {
-  position: relative;
-  z-index: 2;
-  color: #fff;
-  letter-spacing: 0.12em;
-  font-size: 9px;
-  font-weight: 600;
-}
-
 
 /* =========================================================
-   ADMIN LOGIN
+   15. ADMIN LOGIN
 ========================================================= */
 
 .admin-login {
@@ -1130,7 +1183,7 @@ h2 em {
   padding: 0 13px;
   border: 1px solid #d7d7d2;
   background: #fff;
-  transition: border-color 0.2s;
+  transition: border-color 0.2s ease;
 }
 
 .admin-login-input:focus-within {
@@ -1190,7 +1243,9 @@ h2 em {
   font-size: 12px;
   font-weight: 700;
   cursor: pointer;
-  transition: opacity 0.2s, transform 0.2s;
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
 }
 
 .admin-login-button:hover {
@@ -1239,226 +1294,768 @@ h2 em {
 
 
 /* =========================================================
-   ADMIN PAGE
+   16. ADMIN LAYOUT
 ========================================================= */
 
-.admin-page {
+.admin-layout {
   min-height: 100vh;
   display: grid;
-  grid-template-columns: 240px 1fr;
+  grid-template-columns: 250px minmax(0, 1fr);
   background: #f1f1ec;
-}
-
-.admin-sidebar {
-  background: #111;
-  color: #fff;
-  padding: 30px 20px;
-  display: flex;
-  flex-direction: column;
-}
-
-.admin-brand {
-  color: #fff;
-  margin-bottom: 45px;
-}
-
-.admin-welcome {
-  color: #999;
-  font-size: 12px;
-  margin-bottom: 30px;
-}
-
-.admin-nav {
-  border: 0;
-  background: none;
-  color: #aaa;
-  display: flex;
-  gap: 12px;
-  align-items: center;
-  padding: 13px 10px;
-  cursor: pointer;
-  text-align: left;
-  width: 100%;
-}
-
-.admin-nav.active,
-.admin-nav:hover {
-  color: #fff;
-  background: #222;
-}
-
-.admin-nav.logout {
-  margin-top: auto;
-}
-
-.admin-content {
-  padding: 55px;
-  overflow: auto;
-}
-
-.admin-top {
-  display: flex;
-  justify-content: space-between;
-  align-items: start;
-}
-
-.admin-top h1 {
-  font-size: 60px;
-  margin-bottom: 45px;
-}
-
-.admin-role {
-  font-size: 9px;
-  letter-spacing: 0.14em;
-  border: 1px solid #bbb;
-  padding: 8px 10px;
 }
 
 
 /* =========================================================
-   ADMIN STATS
+   17. ADMIN SIDEBAR
 ========================================================= */
 
-.stats-grid {
+.admin-sidebar {
+  background: #111;
+  color: #fff;
+  padding: 28px 18px;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  z-index: 100;
+}
+
+.admin-sidebar-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0 8px;
+  margin-bottom: 40px;
+}
+
+.admin-sidebar-header > div {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.admin-sidebar-header strong {
+  font-size: 20px;
+  letter-spacing: -0.06em;
+}
+
+.admin-sidebar-header span {
+  font-size: 9px;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.13em;
+}
+
+.sidebar-close {
+  display: none;
+  border: 0;
+  background: transparent;
+  color: #fff;
+  cursor: pointer;
+  width: 36px;
+  height: 36px;
+  align-items: center;
+  justify-content: center;
+}
+
+.sidebar-close:hover {
+  background: #222;
+}
+
+.admin-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.admin-nav button {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  color: #999;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 12px;
+  cursor: pointer;
+  text-align: left;
+  font-size: 12px;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease;
+}
+
+.admin-nav button:hover,
+.admin-nav button.active {
+  background: #222;
+  color: #fff;
+}
+
+.admin-sidebar-footer {
+  margin-top: auto;
+  padding-top: 25px;
+  border-top: 1px solid #292929;
+}
+
+.admin-user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 15px;
+  padding: 0 5px;
+}
+
+.admin-avatar {
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  place-items: center;
+  background: #fff;
+  color: #111;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.admin-user > div:last-child {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.admin-user strong {
+  font-size: 11px;
+  color: #fff;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-user span {
+  font-size: 9px;
+  color: #888;
+}
+
+.logout-button {
+  width: 100%;
+  border: 1px solid #333;
+  background: transparent;
+  color: #aaa;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 42px;
+  cursor: pointer;
+  font-size: 11px;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.logout-button:hover {
+  background: #fff;
+  color: #111;
+  border-color: #fff;
+}
+
+
+/* =========================================================
+   18. ADMIN MOBILE OVERLAY
+========================================================= */
+
+.admin-sidebar-overlay {
+  display: none;
+}
+
+
+/* =========================================================
+   19. ADMIN MAIN
+========================================================= */
+
+.admin-main {
+  min-width: 0;
+  width: 100%;
+  padding: 35px 45px 60px;
+  overflow-x: hidden;
+}
+
+.admin-topbar {
+  display: flex;
+  align-items: flex-start;
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+.admin-topbar > div {
+  flex: 1;
+  min-width: 0;
+}
+
+.admin-topbar h1 {
+  margin: 0 0 8px;
+  font-size: clamp(38px, 5vw, 64px);
+  line-height: 0.95;
+}
+
+.admin-topbar p {
+  margin: 0;
+  color: #777;
+  font-size: 12px;
+}
+
+.admin-menu-button {
+  display: none;
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  border: 1px solid #d8d8d2;
+  background: #fff;
+  color: #111;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+}
+
+.admin-menu-button:hover {
+  background: #111;
+  color: #fff;
+}
+
+.refresh-button {
+  height: 42px;
+  flex-shrink: 0;
+  border: 1px solid #d8d8d2;
+  background: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 14px;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 700;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease;
+}
+
+.refresh-button:hover {
+  background: #111;
+  color: #fff;
+}
+
+.refresh-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+
+/* =========================================================
+   20. ADMIN MESSAGE
+========================================================= */
+
+.admin-message {
+  margin-bottom: 25px;
+  padding: 13px 15px;
+  background: #ecece7;
+  border: 1px solid #ddd;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   gap: 15px;
-  margin-bottom: 55px;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.admin-message button {
+  border: 0;
+  background: transparent;
+  color: #555;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.admin-message button:hover {
+  color: #111;
+}
+
+
+/* =========================================================
+   21. ADMIN STATS
+========================================================= */
+
+.admin-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+  margin-bottom: 45px;
 }
 
 .stat-card {
   background: #fff;
-  padding: 24px;
-  min-height: 120px;
+  border: 1px solid #e0e0da;
+  padding: 20px;
+  min-height: 125px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.stat-card-icon {
+  width: 46px;
+  height: 46px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  background: #111;
+  color: #fff;
+}
+
+.stat-card > div:last-child {
+  min-width: 0;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  gap: 6px;
 }
 
 .stat-card span {
   color: #777;
-  font-size: 11px;
+  font-size: 9px;
   text-transform: uppercase;
   letter-spacing: 0.12em;
 }
 
 .stat-card strong {
-  font-size: 30px;
+  font-size: 24px;
+  line-height: 1.1;
   letter-spacing: -0.05em;
+  overflow-wrap: anywhere;
 }
 
 
 /* =========================================================
-   ADMIN SECTION
+   22. ADMIN SECTION
 ========================================================= */
 
-.admin-section-heading {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border-top: 1px solid #ccc;
-  padding-top: 24px;
-  margin-top: 35px;
+.admin-section {
+  width: 100%;
 }
 
-.admin-section-heading h2 {
-  font-size: 28px;
+.admin-section > .section-heading {
+  margin-bottom: 25px;
+}
+
+.admin-section > .section-heading h2 {
+  margin-bottom: 8px;
+  font-size: 30px;
+}
+
+.admin-section > .section-heading p {
+  margin: 0;
+  color: #777;
+  font-size: 12px;
+  line-height: 1.5;
 }
 
 
 /* =========================================================
-   ADMIN FORM
+   23. ADMIN CARD
 ========================================================= */
 
-.admin-form {
+.admin-card {
   background: #fff;
-  padding: 30px;
+  border: 1px solid #deded8;
+  padding: 25px;
+  margin-bottom: 25px;
+  min-width: 0;
+}
+
+.card-title {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 25px;
+}
+
+.card-title h3 {
+  margin: 0 0 6px;
+  font-size: 18px;
+}
+
+.card-title p {
+  margin: 0;
+  color: #777;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+
+/* =========================================================
+   24. ADMIN PRODUCT FORM
+========================================================= */
+
+.product-form {
+  margin-bottom: 30px;
+}
+
+.form-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0 25px;
 }
 
-.admin-form label {
-  margin: 10px 0 20px;
+.form-grid label {
+  min-width: 0;
 }
 
-.admin-form .full {
+.admin-card label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 10px 0 20px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.admin-card label > span {
+  color: #333;
+}
+
+.form-grid input,
+.form-grid textarea,
+.form-grid select,
+.admin-form input,
+.admin-form textarea,
+.admin-form select {
+  width: 100%;
+  border: 1px solid #d8d8d2;
+  background: #fff;
+  padding: 12px;
+  outline: none;
+  color: #111;
+  transition: border-color 0.2s ease;
+}
+
+.form-grid input:focus,
+.form-grid textarea:focus,
+.form-grid select:focus,
+.admin-form input:focus,
+.admin-form textarea:focus,
+.admin-form select:focus {
+  border-color: #111;
+}
+
+.form-grid textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+.full-width {
   grid-column: 1 / -1;
 }
 
-.file-input {
+.image-upload {
   border: 1px dashed #aaa;
   padding: 15px;
-  display: flex !important;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.image-upload input[type="file"] {
+  display: none;
+}
+
+.image-upload-button {
+  width: fit-content;
+  min-height: 42px;
+  margin: 0 !important;
+  padding: 0 14px;
+  display: inline-flex !important;
   flex-direction: row !important;
   align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 1px solid #111;
+  background: #111;
+  color: #fff;
+  cursor: pointer;
 }
 
-.file-input input {
-  border: 0;
-  padding: 0;
+.image-upload-button:hover {
+  background: #333;
 }
 
-.check {
+.image-upload small {
+  color: #777;
+  font-size: 10px;
+  font-weight: 400;
+}
+
+.checkbox-row {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 25px;
+  margin-top: 5px;
+}
+
+.checkbox-label {
+  margin: 0 !important;
   flex-direction: row !important;
   align-items: center;
+  gap: 8px !important;
+  cursor: pointer;
+  font-weight: 600 !important;
 }
 
-.check input {
+.checkbox-label input {
   width: auto;
+  margin: 0;
 }
 
-.message {
-  background: #ecece7;
-  padding: 12px;
-  font-size: 12px;
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding-top: 10px;
+  margin-top: 10px;
+  border-top: 1px solid #eee;
 }
 
 
 /* =========================================================
-   ADMIN TABLE
+   25. ADMIN TWO COLUMN
 ========================================================= */
 
-.admin-table-wrap {
-  overflow: auto;
+.admin-two-column {
+  display: grid;
+  grid-template-columns: minmax(300px, 0.8fr) minmax(0, 1.2fr);
+  gap: 25px;
+  align-items: start;
+}
+
+.admin-two-column > * {
+  min-width: 0;
+}
+
+
+/* =========================================================
+   26. ADMIN CATEGORY MANAGEMENT
+   Scoped agar tidak bentrok dengan PUBLIC category-card
+========================================================= */
+
+.admin-page .category-list,
+.admin-layout .category-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.admin-layout .category-card {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 15px;
+  min-height: 0;
+  padding: 17px;
   background: #fff;
+  border: 1px solid #deded8;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.admin-layout .category-card:first-child {
+  border-left: 1px solid #deded8;
+}
+
+.admin-layout .category-card:hover {
+  transform: translateY(-2px);
+  background: #fff;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
+}
+
+.admin-layout .category-card > svg {
+  position: static;
+}
+
+.category-card-icon {
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #111;
+  color: #fff;
+}
+
+.category-card-icon svg {
+  position: static !important;
+}
+
+.category-card-content {
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.category-card-content strong {
+  display: block;
+  font-size: 16px;
+  line-height: 1.25;
+  color: #111;
+}
+
+.category-card-content > span {
+  display: block;
+  color: #777;
+  font-size: 11px;
+}
+
+.category-card-content small {
+  display: block;
+  margin-top: 5px;
+  color: #666;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.category-card-actions {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 7px;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+.category-card-actions .table-action {
+  width: 38px;
+  height: 38px;
+  min-width: 38px;
+  margin: 0;
+  padding: 0;
+  border-radius: 7px;
+}
+
+
+/* =========================================================
+   27. ADMIN TABLE
+========================================================= */
+
+.table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .admin-table {
   width: 100%;
+  min-width: 760px;
   border-collapse: collapse;
-  min-width: 720px;
 }
 
 .admin-table th,
 .admin-table td {
+  padding: 14px 12px;
+  border-bottom: 1px solid #e1e1dc;
   text-align: left;
-  padding: 15px;
-  border-bottom: 1px solid #ddd;
+  vertical-align: middle;
   font-size: 12px;
 }
 
 .admin-table th {
-  font-size: 9px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
   color: #777;
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  white-space: nowrap;
 }
 
-.table-product {
+.admin-table tbody tr:hover {
+  background: #fafaf7;
+}
+
+.product-table-info {
   display: flex;
   align-items: center;
   gap: 12px;
+  min-width: 200px;
 }
 
-.table-product img,
-.table-product span {
-  width: 42px;
-  height: 52px;
-  object-fit: cover;
-  background: #ddd;
+.product-table-info > div:last-child {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.product-table-info strong {
+  display: block;
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.product-table-info small {
+  display: block;
+  color: #777;
+  font-size: 10px;
+}
+
+.product-table-image {
+  width: 45px;
+  height: 56px;
+  flex-shrink: 0;
+  background: #e8e8e3;
   display: grid;
   place-items: center;
+  overflow: hidden;
+  color: #888;
+}
+
+.product-table-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.customer-table-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 120px;
+}
+
+.customer-table-info strong {
+  font-size: 12px;
+}
+
+.customer-table-info small {
+  color: #777;
+  font-size: 10px;
+}
+
+.table-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .table-action {
@@ -1466,147 +2063,13 @@ h2 em {
   height: 38px;
   border: 1px solid #ddd;
   background: #fff;
+  color: #111;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   padding: 0;
   margin: 0;
-  transition: 0.2s;
-}
-
-.table-action:hover {
-  background: #111;
-  color: #fff;
-  border-color: #111;
-}
-
-.table-action.danger {
-  color: #a22;
-}
-
-.table-action.danger:hover {
-  background: #a22;
-  color: #fff;
-  border-color: #a22;
-}
-
-.admin-table td small {
-  display: block;
-  color: #777;
-  margin-top: 4px;
-}
-
-
-/* =========================================================
-   CATEGORY MANAGEMENT - ADMIN
-========================================================= */
-
-/*
-   PENTING:
-   Bagian ini khusus category CRUD.
-   Tombol Edit + Delete dibuat SELALU SEJAJAR.
-*/
-
-.category-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 16px;
-  margin-bottom: 40px;
-}
-
-.category-card {
-  position: relative;
-  display: flex;
-  align-items: flex-start;
-  gap: 16px;
-  padding: 20px;
-  background: #fff;
-  border: 1px solid #deded8;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-  min-width: 0;
-}
-
-.category-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
-}
-
-.category-card-icon {
-  width: 48px;
-  height: 48px;
-  min-width: 48px;
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #111;
-  color: #fff;
-}
-
-.category-card-content {
-  min-width: 0;
-  flex: 1;
-}
-
-.category-card-content h3 {
-  margin: 0 0 3px;
-  font-size: 18px;
-  color: #111;
-  line-height: 1.25;
-}
-
-.category-card-content > span {
-  font-size: 12px;
-  color: #777;
-}
-
-.category-card-content p {
-  margin: 10px 0;
-  color: #666;
-  font-size: 13px;
-  line-height: 1.5;
-}
-
-.category-card-content small {
-  display: inline-block;
-  font-size: 11px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: #111;
-}
-
-/*
-   FIX UTAMA:
-   Edit dan Delete tidak boleh menggunakan column.
-*/
-
-.category-card-actions {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 8px;
-  flex-shrink: 0;
-  margin-left: auto;
-  padding-left: 8px;
-}
-
-.category-card-actions .table-action {
-  width: 40px;
-  height: 40px;
-  min-width: 40px;
-  flex-shrink: 0;
-  margin: 0;
-  padding: 0;
-  border: 1px solid #deded8;
-  border-radius: 8px;
-  background: #fff;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
   transition:
     background 0.2s ease,
     color 0.2s ease,
@@ -1614,140 +2077,510 @@ h2 em {
     transform 0.2s ease;
 }
 
-.category-card-actions .table-action:hover {
-  transform: translateY(-1px);
+.table-action:hover {
   background: #111;
   color: #fff;
   border-color: #111;
+  transform: translateY(-1px);
 }
 
-.category-card-actions .table-action.danger {
-  color: #a22;
-  background: #fff;
+.table-action.danger {
+  color: var(--danger);
 }
 
-.category-card-actions .table-action.danger:hover {
-  background: #a22;
+.table-action.danger:hover {
+  background: var(--danger);
   color: #fff;
-  border-color: #a22;
+  border-color: var(--danger);
+}
+
+.table-action:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.status-select {
+  min-width: 125px;
+  padding: 8px 10px;
+  border: 1px solid #d8d8d2;
+  background: #fff;
+  color: #111;
+  font-size: 11px;
+  outline: none;
+}
+
+.status-select:focus {
+  border-color: #111;
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 26px;
+  padding: 5px 9px;
+  background: #f0f0eb;
+  border: 1px solid #ddd;
+  color: #555;
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+}
+
+.status-badge.active {
+  background: #edf6ef;
+  border-color: #cce2d1;
+  color: #247a45;
+}
+
+.status-badge.inactive {
+  background: #f6eded;
+  border-color: #e5caca;
+  color: #a22;
+}
+
+.stock-ok {
+  color: #247a45;
+  font-weight: 700;
+}
+
+.stock-empty {
+  color: #a22;
+  font-weight: 700;
 }
 
 
 /* =========================================================
-   ADMIN REPORT
+   28. REPORT
 ========================================================= */
 
-.admin-report-subtitle {
-  margin: -15px 0 0;
-  color: #777;
-  font-size: 12px;
-  line-height: 1.5;
-}
-
-.order-report-toolbar {
+.report-toolbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-top: 20px;
-  margin-bottom: 15px;
+  gap: 20px;
   padding: 18px;
+  margin-bottom: 20px;
   background: #fff;
   border: 1px solid #ddd;
 }
 
-.order-period {
+.period-buttons {
   display: flex;
-  align-items: center;
-  gap: 20px;
-}
-
-.order-period-label {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 12px;
-}
-
-.order-period-buttons {
-  display: flex;
+  flex-wrap: wrap;
   gap: 6px;
 }
 
-.order-period-buttons button {
+.period-buttons button {
   border: 1px solid #d8d8d2;
   background: transparent;
   padding: 10px 15px;
   cursor: pointer;
   font-size: 11px;
   font-weight: 700;
-  transition: 0.2s;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease;
 }
 
-.order-period-buttons button:hover {
+.period-buttons button:hover {
   border-color: #111;
 }
 
-.order-period-buttons button.active {
+.period-buttons button.active {
   background: #111;
   color: #fff;
   border-color: #111;
 }
 
-
-/* =========================================================
-   REPORT STATISTICS
-========================================================= */
-
-.order-report-stats {
+.report-stats {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 12px;
   margin-bottom: 25px;
 }
 
-.order-report-card {
+.report-card {
   background: #fff;
   border: 1px solid #ddd;
   padding: 20px;
-  min-height: 85px;
+  min-height: 100px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
 }
 
-.order-report-card span {
+.report-card span {
   color: #777;
   font-size: 9px;
   text-transform: uppercase;
   letter-spacing: 0.12em;
 }
 
-.order-report-card strong {
+.report-card strong {
+  font-size: 22px;
+  letter-spacing: -0.04em;
+  overflow-wrap: anywhere;
+}
+
+
+/* =========================================================
+   29. ORDER MANAGEMENT
+========================================================= */
+
+.orders-table th,
+.orders-table td {
+  vertical-align: middle;
+}
+
+.table-subtext {
+  display: block;
+  margin-top: 4px;
+  font-size: 11px;
+  color: #777;
+}
+
+.order-count {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  font-size: 12px;
+  color: #555;
+}
+
+.order-status-select,
+.modal-status-select {
+  min-width: 125px;
+  padding: 8px 10px;
+  border: 1px solid #d8d8d2;
+  background: #fff;
+  color: #111;
+  font-size: 12px;
+  outline: none;
+}
+
+.order-status-select:focus,
+.modal-status-select:focus {
+  border-color: #111;
+}
+
+.detail-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+
+/* =========================================================
+   30. ORDER MODAL
+   Class disesuaikan dengan JSX:
+   .order-modal-backdrop
+   .order-modal
+========================================================= */
+
+.order-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(0, 0, 0, 0.55);
+  overscroll-behavior: contain;
+}
+
+.order-modal {
+  width: min(820px, calc(100vw - 32px));
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
+  background: #fff;
+  border: 1px solid #ddd;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.2);
+}
+
+.order-modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 25px 28px;
+  border-bottom: 1px solid #ddd;
+}
+
+.order-modal-header > div {
+  min-width: 0;
+}
+
+.order-modal-header > div > span {
+  display: block;
+  margin-bottom: 6px;
+  color: #777;
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.13em;
+}
+
+.order-modal-header h2 {
+  margin: 0;
+  font-size: 28px;
+  line-height: 1;
+  overflow-wrap: anywhere;
+}
+
+.modal-close {
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #ddd;
+  background: #fff;
+  color: #111;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.modal-close:hover {
+  background: #111;
+  color: #fff;
+  border-color: #111;
+}
+
+.order-modal-body {
+  padding: 25px 28px;
+}
+
+
+/* =========================================================
+   31. ORDER DETAIL GRID
+========================================================= */
+
+.order-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.order-detail-box {
+  padding: 14px;
+  background: #f7f7f4;
+  border: 1px solid #e4e4df;
+  min-width: 0;
+}
+
+.order-detail-box span,
+.order-address-box > span {
+  display: block;
+  margin-bottom: 6px;
+  color: #777;
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.order-detail-box strong {
+  display: block;
+  color: #111;
+  font-size: 13px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+
+/* =========================================================
+   32. ORDER ADDRESS
+========================================================= */
+
+.order-address-box {
+  padding: 16px;
+  margin-bottom: 25px;
+  border: 1px solid #e4e4df;
+}
+
+.order-address-box p {
+  margin: 0;
+  color: #444;
+  font-size: 12px;
+  line-height: 1.6;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+
+
+/* =========================================================
+   33. ORDER DETAIL SECTION
+========================================================= */
+
+.order-detail-section {
+  margin-top: 25px;
+}
+
+.order-detail-section-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  margin-bottom: 12px;
+}
+
+.order-detail-section-title h3 {
+  margin: 0;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+}
+
+.order-detail-section-title span {
+  color: #777;
+  font-size: 10px;
+}
+
+
+/* =========================================================
+   34. ORDER ITEMS
+========================================================= */
+
+.order-items-list {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #e4e4df;
+}
+
+.order-item-detail {
+  display: grid;
+  grid-template-columns: 58px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  padding: 14px;
+  border-bottom: 1px solid #e4e4df;
+}
+
+.order-item-detail:last-child {
+  border-bottom: 0;
+}
+
+.order-item-image {
+  width: 58px;
+  height: 58px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: #f4f4f1;
+  color: #888;
+}
+
+.order-item-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.order-item-info {
+  min-width: 0;
+}
+
+.order-item-info strong {
+  display: block;
+  margin-bottom: 4px;
+  color: #111;
+  font-size: 13px;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.order-item-info small {
+  display: block;
+  margin-bottom: 5px;
+  color: #888;
+  font-size: 10px;
+}
+
+.order-item-info span {
+  display: block;
+  color: #777;
+  font-size: 11px;
+}
+
+.order-item-subtotal {
+  white-space: nowrap;
+  font-size: 13px;
+}
+
+.empty-order-items {
+  min-height: 130px;
+  padding: 30px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  text-align: center;
+  color: #777;
+  font-size: 11px;
+}
+
+
+/* =========================================================
+   35. ORDER TOTAL
+========================================================= */
+
+.order-total-box {
+  margin-top: 25px;
+  padding-top: 20px;
+  border-top: 2px solid #111;
+}
+
+.order-total-box > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.order-total-box span {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.order-total-box strong {
   font-size: 22px;
   letter-spacing: -0.04em;
 }
 
 
 /* =========================================================
-   EXPORT PDF
+   36. ORDER MODAL FOOTER
 ========================================================= */
 
-.admin-section-heading .button {
-  min-height: 42px;
-  padding: 0 16px;
-  font-size: 12px;
-}
-
-.admin-section-heading .button:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
+.order-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  padding: 18px 28px;
+  border-top: 1px solid #ddd;
 }
 
 
 /* =========================================================
-   SPINNER
+   37. SPINNERS
 ========================================================= */
 
+.spin,
 .admin-spin {
   animation: admin-spin 1s linear infinite;
 }
@@ -1760,48 +2593,7 @@ h2 em {
 
 
 /* =========================================================
-   ADMIN MOBILE HEADER
-========================================================= */
-
-.admin-mobile-header {
-  display: none;
-}
-
-.admin-mobile-menu {
-  display: none;
-  width: 44px;
-  height: 44px;
-  border: 1px solid #d8d8d2;
-  background: #fff;
-  color: #111;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: 0.2s;
-}
-
-.admin-mobile-menu:hover {
-  background: #111;
-  color: #fff;
-}
-
-.admin-sidebar-close {
-  display: none;
-  border: 0;
-  background: transparent;
-  color: #fff;
-  cursor: pointer;
-  align-items: center;
-  justify-content: center;
-}
-
-.admin-sidebar-overlay {
-  display: none;
-}
-
-
-/* =========================================================
-   FOOTER
+   38. FOOTER
 ========================================================= */
 
 .footer {
@@ -1855,7 +2647,26 @@ h2 em {
 
 
 /* =========================================================
-   RESPONSIVE - TABLET
+   39. TABLET
+========================================================= */
+
+@media (max-width: 1100px) {
+  .admin-main {
+    padding: 30px;
+  }
+
+  .admin-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .admin-two-column {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+/* =========================================================
+   40. MOBILE ADMIN / TABLET
 ========================================================= */
 
 @media (max-width: 900px) {
@@ -1863,8 +2674,7 @@ h2 em {
     width: min(calc(100% - 32px), var(--max));
   }
 
-  /* NAV */
-
+  /* PUBLIC NAV */
   .nav-links {
     display: none;
     position: absolute;
@@ -1891,8 +2701,7 @@ h2 em {
     display: grid;
   }
 
-  /* MAIN */
-
+  /* PUBLIC */
   .hero-grid,
   .detail-grid,
   .cart-layout,
@@ -1935,32 +2744,9 @@ h2 em {
   }
 
   /* ADMIN */
-
-  .admin-page {
+  .admin-layout {
     display: block;
     min-height: 100vh;
-    position: relative;
-  }
-
-  .admin-mobile-header {
-    height: 70px;
-    padding: 0 20px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    background: #fff;
-    border-bottom: 1px solid #ddd;
-    position: sticky;
-    top: 0;
-    z-index: 80;
-  }
-
-  .admin-mobile-header .brand {
-    font-size: 20px;
-  }
-
-  .admin-mobile-menu {
-    display: flex;
   }
 
   .admin-sidebar {
@@ -1971,78 +2757,114 @@ h2 em {
     height: 100vh;
     min-height: 100vh;
     padding: 28px 20px;
-    z-index: 100;
-    overflow-y: auto;
     transform: translateX(-100%);
     transition: transform 0.3s ease;
+    overflow-y: auto;
   }
 
-  .admin-sidebar.open {
+  .admin-layout.sidebar-open .admin-sidebar {
     transform: translateX(0);
   }
 
-  .admin-sidebar-close {
+  .sidebar-close {
     display: flex;
-    position: absolute;
-    top: 24px;
-    right: 18px;
-    width: 36px;
-    height: 36px;
-  }
-
-  .admin-sidebar-close:hover {
-    background: #222;
-  }
-
-  .admin-brand {
-    padding-right: 40px;
   }
 
   .admin-sidebar-overlay {
-    display: block;
     position: fixed;
     inset: 0;
     z-index: 90;
+    display: block;
+    border: 0;
+    padding: 0;
     background: rgba(0, 0, 0, 0.45);
     opacity: 0;
     visibility: hidden;
+    pointer-events: none;
     transition:
       opacity 0.3s ease,
       visibility 0.3s ease;
   }
 
-  .admin-sidebar-overlay.open {
+  .admin-layout.sidebar-open .admin-sidebar-overlay {
     opacity: 1;
     visibility: visible;
+    pointer-events: auto;
   }
 
-  .admin-content {
+  .admin-main {
     width: 100%;
-    padding: 30px 20px;
+    padding: 25px 20px 45px;
   }
 
-  .admin-top {
-    gap: 20px;
+  .admin-menu-button {
+    display: flex;
   }
 
-  .category-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .order-period {
-    flex-direction: column;
+  .admin-topbar {
     align-items: flex-start;
-    gap: 12px;
   }
 
-  .order-report-stats {
+  .admin-topbar h1 {
+    font-size: 42px;
+  }
+
+  .admin-stats {
     grid-template-columns: repeat(2, 1fr);
+  }
+
+  .admin-layout .category-list {
+    gap: 10px;
   }
 }
 
 
 /* =========================================================
-   RESPONSIVE - MOBILE
+   41. ORDER MODAL TABLET
+========================================================= */
+
+@media (max-width: 700px) {
+  .order-modal-backdrop {
+    padding: 10px;
+  }
+
+  .order-modal {
+    width: calc(100vw - 20px);
+    max-height: calc(100vh - 20px);
+  }
+
+  .order-modal-header,
+  .order-modal-body {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+
+  .order-detail-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .order-item-detail {
+    grid-template-columns: 48px minmax(0, 1fr);
+  }
+
+  .order-item-image {
+    width: 48px;
+    height: 48px;
+  }
+
+  .order-item-subtotal {
+    grid-column: 2;
+    justify-self: start;
+  }
+
+  .order-total-box strong {
+    font-size: 18px;
+  }
+}
+
+
+/* =========================================================
+   42. MOBILE
 ========================================================= */
 
 @media (max-width: 560px) {
@@ -2064,8 +2886,7 @@ h2 em {
 
   .category-grid,
   .product-grid,
-  .gallery-grid,
-  .stats-grid {
+  .gallery-grid {
     grid-template-columns: 1fr;
   }
 
@@ -2117,344 +2938,211 @@ h2 em {
   }
 
   /* ADMIN */
-
-  .admin-mobile-header {
-    height: 64px;
-    padding: 0 15px;
+  .admin-main {
+    padding: 20px 15px 40px;
   }
 
-  .admin-mobile-header .brand {
-    font-size: 18px;
+  .admin-topbar {
+    gap: 10px;
   }
 
-  .admin-content {
-    padding: 24px 15px;
+  .admin-topbar h1 {
+    font-size: 34px;
   }
 
-  .admin-top {
-    flex-direction: column;
-    align-items: flex-start;
+  .admin-topbar p {
+    font-size: 11px;
   }
 
-  .admin-top h1 {
-    font-size: 38px;
-    margin-bottom: 25px;
+  .refresh-button {
+    width: 42px;
+    padding: 0;
+    font-size: 0;
   }
 
-  .stats-grid {
+  .refresh-button svg {
+    width: 17px;
+    height: 17px;
+  }
+
+  .admin-stats {
     grid-template-columns: 1fr;
-    gap: 12px;
-    margin-bottom: 35px;
+    gap: 10px;
+    margin-bottom: 30px;
   }
 
   .stat-card {
-    min-height: 100px;
+    min-height: 95px;
   }
 
-  .admin-sidebar {
-    width: min(86vw, 290px);
-  }
-
-  .admin-section-heading {
-    align-items: flex-start;
-    flex-direction: column;
-    gap: 15px;
-  }
-
-  .admin-section-heading h2 {
-    font-size: 24px;
-  }
-
-  .admin-form {
-    grid-template-columns: 1fr;
+  .admin-card {
     padding: 18px;
   }
 
-  .admin-form .full {
-    grid-column: auto;
-  }
-
-  .admin-table-wrap {
-    width: 100%;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-  }
-
-  .admin-table {
-    min-width: 720px;
-  }
-
-  /* REPORT */
-
-  .order-report-toolbar {
-    padding: 14px;
-  }
-
-  .order-period {
-    width: 100%;
-  }
-
-  .order-period-buttons {
-    width: 100%;
-  }
-
-  .order-period-buttons button {
-    flex: 1;
-    padding: 9px 5px;
-  }
-
-  .order-report-stats {
-    grid-template-columns: 1fr;
-  }
-
-  /* CATEGORY */
-
-  .category-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .category-card {
-    padding: 16px;
+  .card-title {
+    flex-direction: column;
+    align-items: flex-start;
     gap: 12px;
   }
 
-  .category-card-icon {
-    width: 42px;
-    height: 42px;
-    min-width: 42px;
+  .form-grid {
+    grid-template-columns: 1fr;
   }
 
-  .category-card-content {
+  .full-width {
+    grid-column: auto;
+  }
+
+  .checkbox-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .form-actions {
+    justify-content: stretch;
+  }
+
+  .form-actions .primary-button,
+  .form-actions .secondary-button {
+    width: 100%;
+  }
+
+  .admin-two-column {
+    grid-template-columns: 1fr;
+  }
+
+  .report-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .period-buttons {
+    width: 100%;
+  }
+
+  .period-buttons button {
+    flex: 1;
     min-width: 0;
+    padding: 9px 7px;
   }
 
-  .category-card-content h3 {
-    font-size: 16px;
+  .report-toolbar .primary-button {
+    width: 100%;
   }
 
-  /*
-     TETAP ROW DI MOBILE.
-     Jangan ubah menjadi column.
-  */
+  .report-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-layout .category-card {
+    padding: 14px;
+    gap: 10px;
+  }
+
+  .category-card-icon {
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+  }
+
+  .category-card-content strong {
+    font-size: 15px;
+  }
+
+  .category-card-content > span {
+    font-size: 10px;
+  }
+
+  .category-card-content small {
+    font-size: 10px;
+  }
 
   .category-card-actions {
-    flex-direction: row;
-    align-items: center;
-    gap: 6px;
-    padding-left: 4px;
+    gap: 5px;
   }
 
   .category-card-actions .table-action {
+    width: 34px;
+    height: 34px;
+    min-width: 34px;
+  }
+
+  .admin-message {
+    align-items: flex-start;
+  }
+
+  .order-modal-header h2 {
+    font-size: 22px;
+  }
+
+  .order-modal-footer {
+    padding: 15px 20px;
+  }
+
+  .order-modal-footer .secondary-button {
+    width: 100%;
+  }
+}
+
+
+/* =========================================================
+   43. VERY SMALL SCREEN
+========================================================= */
+
+@media (max-width: 380px) {
+  .container {
+    width: calc(100% - 24px);
+  }
+
+  .admin-sidebar {
+    width: 86vw;
+  }
+
+  .admin-topbar h1 {
+    font-size: 30px;
+  }
+
+  .admin-card {
+    padding: 14px;
+  }
+
+  .admin-layout .category-card {
+    gap: 7px;
+    padding: 11px;
+  }
+
+  .category-card-icon {
     width: 36px;
     height: 36px;
     min-width: 36px;
   }
-}
-
-
-/* =========================================================
-   VERY SMALL SCREEN
-========================================================= */
-
-@media (max-width: 380px) {
-  .category-card {
-    gap: 8px;
-    padding: 12px;
-  }
-
-  .category-card-icon {
-    width: 38px;
-    height: 38px;
-    min-width: 38px;
-  }
 
   .category-card-actions {
-    gap: 4px;
+    gap: 3px;
   }
 
   .category-card-actions .table-action {
-    width: 32px;
-    height: 32px;
-    min-width: 32px;
+    width: 30px;
+    height: 30px;
+    min-width: 30px;
   }
 
-  .category-card-content h3 {
-    font-size: 15px;
+  .category-card-content strong {
+    font-size: 14px;
   }
 
-  .category-card-content p {
-    font-size: 12px;
-  }
-}
-/* =========================================================
-   FIX CATEGORY CARD - ICON & EDIT DELETE
-========================================================= */
-
-/* Jangan buat semua SVG di category-card menjadi absolute */
-.category-card > svg {
-  position: static;
-}
-
-/* Icon folder kategori */
-.category-card .category-card-icon {
-  position: relative;
-  flex: 0 0 48px;
-  width: 48px;
-  height: 48px;
-  min-width: 48px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #111;
-  color: #fff;
-}
-
-/* Pastikan SVG di dalam kotak icon tetap di tengah */
-.category-card .category-card-icon svg {
-  position: static !important;
-  width: 24px;
-  height: 24px;
-  flex-shrink: 0;
-}
-
-/* Isi kategori */
-.category-card .category-card-content {
-  flex: 1;
-  min-width: 0;
-  padding-right: 5px;
-}
-
-/* Tombol Edit & Delete */
-.category-card .category-card-actions {
-  position: relative;
-  z-index: 5;
-
-  display: flex;
-  flex-direction: row;
-  align-items: flex-start;
-  justify-content: flex-end;
-
-  gap: 6px;
-
-  flex: 0 0 auto;
-  min-width: 72px;
-}
-
-/* Tombol action */
-.category-card .category-card-actions .table-action {
-  position: relative;
-
-  width: 34px;
-  height: 34px;
-
-  margin: 0;
-  padding: 0;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  border: 1px solid #d8d8d2;
-  background: #fff;
-  color: #111;
-
-  cursor: pointer;
-}
-
-/* Icon Edit/Delete */
-.category-card .category-card-actions .table-action svg {
-  position: static !important;
-  width: 16px;
-  height: 16px;
-  flex-shrink: 0;
-}
-
-/* Hover Edit */
-.category-card .category-card-actions .table-action:hover {
-  background: #111;
-  color: #fff;
-  border-color: #111;
-}
-
-/* Delete */
-.category-card .category-card-actions .table-action.danger {
-  color: #a22;
-}
-
-/* Hover Delete */
-.category-card .category-card-actions .table-action.danger:hover {
-  background: #a22;
-  color: #fff;
-  border-color: #a22;
-}
-
-/* =========================================================
-   CATEGORY CARD MOBILE
-========================================================= */
-
-@media (max-width: 560px) {
-
-  .category-card {
-    display: flex;
-    align-items: flex-start;
-    gap: 12px;
+  .category-card-content small {
+    font-size: 9px;
   }
 
-  .category-card .category-card-icon {
-    flex: 0 0 42px;
-    width: 42px;
-    height: 42px;
-    min-width: 42px;
+  .order-modal-header,
+  .order-modal-body {
+    padding-left: 15px;
+    padding-right: 15px;
   }
 
-  .category-card .category-card-icon svg {
-    width: 20px;
-    height: 20px;
+  .order-item-detail {
+    padding: 11px;
   }
-
-  .category-card .category-card-actions {
-    flex-direction: row;
-    min-width: auto;
-    gap: 5px;
-  }
-
-  .category-card .category-card-actions .table-action {
-    width: 32px;
-    height: 32px;
-  }
-
-  .category-card .category-card-actions .table-action svg {
-    width: 15px;
-    height: 15px;
-  }
-}
-/* =========================================================
-   PRODUCT DELETE STOCK PROTECTION
-========================================================= */
-
-.table-action.danger {
-  color: #a22;
-}
-
-.table-action.danger:hover {
-  background: #a22;
-  color: #fff;
-  border-color: #a22;
-}
-
-.table-action.danger.disabled,
-.table-action.danger:disabled {
-  opacity: 0.35;
-  cursor: not-allowed;
-  color: #999;
-  background: #f5f5f2;
-  border-color: #d8d8d2;
-}
-
-.table-action.danger.disabled:hover,
-.table-action.danger:disabled:hover {
-  opacity: 0.35;
-  color: #999;
-  background: #f5f5f2;
-  border-color: #d8d8d2;
 }
