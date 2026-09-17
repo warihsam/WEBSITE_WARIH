@@ -27,9 +27,19 @@ export default function Checkout() {
     e.preventDefault();
     setError("");
 
-    if (!form.name || !form.phone || !form.address) {
-      return setError("Semua data checkout wajib diisi.");
-    }
+   if (
+  !form.name.trim() ||
+  !form.phone.trim() ||
+  !form.address.trim()
+) {
+  return setError("Semua data checkout wajib diisi.");
+}
+
+const phone = form.phone.replace(/\D/g, "");
+
+if (phone.length < 10 || phone.length > 15) {
+  return setError("Nomor WhatsApp tidak valid.");
+}
 
     if (!waNumber || waNumber.includes("X")) {
       return setError(

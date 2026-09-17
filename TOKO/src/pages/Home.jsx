@@ -16,11 +16,21 @@ export default function Home() {
   useEffect(() => {
     async function load() {
       const [{ data: products }, { data: cats }] = await Promise.all([
-        supabase
+      supabase
   .from("products")
-  .select("*")
+  .select(`
+    *,
+    categories (
+      id,
+      name,
+      slug
+    )
+  `)
+  .eq("is_active", true)
   .eq("is_featured", true)
-  .order("created_at", { ascending: false })
+  .order("created_at", {
+    ascending: false,
+  })
   .limit(4),
         supabase.from("categories").select("*").order("name"),
       ]);

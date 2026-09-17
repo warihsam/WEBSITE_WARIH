@@ -1,0 +1,65 @@
+.education { position:relative; padding:150px clamp(20px,5vw,72px); background:var(--paper); color:var(--black); overflow:hidden; }
+.education-container { width:min(100%,var(--max)); margin:0 auto; }
+.education-header { max-width:900px; margin-bottom:65px; }
+.education-eyebrow { display:flex; align-items:center; gap:10px; margin-bottom:16px; font:500 9px/1 "DM Mono",monospace; letter-spacing:.14em; color:#777; }
+.education-eyebrow span,.experience-eyebrow span,.activities-eyebrow span { width:25px; height:1px; background:currentColor; }
+.education-header h2 { font-size:clamp(54px,7vw,95px); line-height:.88; letter-spacing:-.06em; }
+.education-header h2 span { font-family:"Playfair Display",Georgia,serif; font-weight:400; font-style:italic; }
+.education-header p { max-width:650px; margin-top:25px; font-size:14px; line-height:1.8; color:#666; }
+.education-grid { display:grid; grid-template-columns:1.15fr .85fr; gap:70px; }
+.education-item { display:grid; grid-template-columns:50px 1fr; gap:20px; }
+.education-line { position:relative; display:flex; justify-content:center; }
+.education-line::after { content:""; position:absolute; top:48px; bottom:-35px; width:1px; background:var(--line); }
+.education-item:last-child .education-line::after { display:none; }
+.education-dot { width:40px; height:40px; display:flex; align-items:center; justify-content:center; border:1px solid var(--line); border-radius:50%; background:var(--white); }
+.education-card { margin-bottom:35px; padding:25px; border:1px solid var(--line); background:rgba(255,255,255,.25); }
+.education-card-header { display:flex; align-items:center; justify-content:space-between; gap:15px; margin-bottom:25px; }
+.education-date { display:flex; align-items:center; gap:7px; font:500 8px/1 "DM Mono",monospace; letter-spacing:.08em; color:#888; }
+.education-status { padding:6px 8px; border:1px solid var(--line); font:500 7px/1 "DM Mono",monospace; letter-spacing:.1em; color:#888; }
+.education-card h3 { font-size:clamp(25px,3vw,36px); line-height:1; letter-spacing:-.04em; }
+.education-school-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  color: inherit;
+  text-decoration: none;
+}
+
+.education-school-link h3 {
+  margin: 0;
+  transition: opacity .25s var(--ease);
+}
+
+.education-school-link svg {
+  flex-shrink: 0;
+  opacity: .45;
+  transition:
+    transform .25s var(--ease),
+    opacity .25s var(--ease);
+}
+
+.education-school-link:hover h3 {
+  opacity: .6;
+}
+
+.education-school-link:hover svg {
+  opacity: 1;
+  transform: translate(3px, -3px);
+}
+.education-major,.education-location { display:flex; align-items:center; gap:7px; margin-top:12px; font-size:11px; color:#666; }
+.education-card p { margin-top:20px; font-size:12px; line-height:1.75; color:#777; }
+.education-card-footer { display:flex; justify-content:space-between; margin-top:22px; padding-top:16px; border-top:1px solid var(--line); font:500 7px/1 "DM Mono",monospace; letter-spacing:.1em; color:#999; }
+.education-focus { padding-top:4px; }
+.focus-header span { font:500 8px/1 "DM Mono",monospace; letter-spacing:.12em; color:#888; }
+.focus-header h3 { max-width:400px; margin-top:15px; font-size:clamp(32px,4vw,52px); line-height:.98; letter-spacing:-.05em; }
+.focus-header strong { font-family:"Playfair Display",Georgia,serif; font-style:italic; font-weight:400; }
+.education-subjects { margin-top:35px; border-top:1px solid var(--line); }
+.education-subject { display:grid; grid-template-columns:35px 1fr auto; gap:12px; align-items:center; padding:15px 0; border-bottom:1px solid var(--line); transition:padding-left .3s var(--ease); }
+.education-subject:hover { padding-left:8px; }
+.subject-number { font:500 8px/1 "DM Mono",monospace; color:#999; }
+.subject-name { font-size:13px; font-weight:600; }
+.education-note { display:grid; grid-template-columns:25px 1fr; gap:12px; margin-top:35px; }
+.note-line { width:20px; height:1px; margin-top:7px; background:#999; }
+.education-note p { max-width:420px; font-size:11px; line-height:1.75; color:#777; }
+@media (max-width:800px){.education{padding:105px 20px 90px}.education-grid{grid-template-columns:1fr;gap:50px}.education-header{margin-bottom:50px}.education-header h2{font-size:clamp(48px,12vw,78px)}}

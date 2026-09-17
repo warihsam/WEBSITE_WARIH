@@ -19,12 +19,10 @@ export default function Products() {
   const [products, setProducts] = useState([]);
   const [categoriesData, setCategoriesData] = useState([]);
   const [query, setQuery] = useState("");
-  const [category, setCategory] =
-    useState(initialCategory);
+  const [category, setCategory] = useState(initialCategory);
   const [sort, setSort] = useState("newest");
   const [loading, setLoading] = useState(true);
-  const [errorMessage, setErrorMessage] =
-    useState("");
+  const [errorMessage, setErrorMessage] = useState("");
 
   // =====================================================
   // LOAD PRODUCTS + CATEGORIES
@@ -37,27 +35,36 @@ export default function Products() {
       setLoading(true);
       setErrorMessage("");
 
-      const [
-        productsResult,
-        categoriesResult,
-      ] = await Promise.all([
-        supabase
-          .from("products")
-          .select("*")
-          .eq("is_active", true)
-          .order("created_at", {
-            ascending: false,
-          }),
+      const [productsResult, categoriesResult] =
+        await Promise.all([
+          supabase
+            .from("products")
+            .select(`
+              *,
+              categories (
+                id,
+                name,
+                slug
+              )
+            `)
+            .eq("is_active", true)
+            .order("created_at", {
+              ascending: false,
+            }),
 
-        supabase
-          .from("categories")
-          .select("*")
-          .order("name", {
-            ascending: true,
-          }),
-      ]);
+          supabase
+            .from("categories")
+            .select("*")
+            .order("name", {
+              ascending: true,
+            }),
+        ]);
 
       if (!mounted) return;
+
+      // -------------------------------------------------
+      // ERROR PRODUCTS
+      // -------------------------------------------------
 
       if (productsResult.error) {
         console.error(
@@ -70,10 +77,13 @@ export default function Products() {
           productsResult.error.message ||
             "Gagal mengambil data produk."
         );
-
         setLoading(false);
         return;
       }
+
+      // -------------------------------------------------
+      // ERROR CATEGORIES
+      // -------------------------------------------------
 
       if (categoriesResult.error) {
         console.error(
@@ -83,6 +93,7 @@ export default function Products() {
 
         setProducts(productsResult.data || []);
         setCategoriesData([]);
+
         setErrorMessage(
           categoriesResult.error.message ||
             "Gagal mengambil kategori."
@@ -91,6 +102,24 @@ export default function Products() {
         setLoading(false);
         return;
       }
+
+      // -------------------------------------------------
+      // DEBUG DATA
+      // -------------------------------------------------
+
+      console.log(
+        "PRODUCTS FROM SUPABASE:",
+        productsResult.data
+      );
+
+      console.log(
+        "FIRST PRODUCT IMAGE:",
+        productsResult.data?.[0]?.image_url
+      );
+
+      // -------------------------------------------------
+      // SET DATA
+      // -------------------------------------------------
 
       setProducts(productsResult.data || []);
       setCategoriesData(
@@ -106,46 +135,6 @@ export default function Products() {
       mounted = false;
     };
   }, []);
-
-  // =====================================================
-  // BUAT MAP CATEGORY ID -> CATEGORY
-  // =====================================================
-
-  const categoryMap = useMemo(() => {
-    const map = new Map();
-
-    categoriesData.forEach((cat) => {
-      map.set(String(cat.id), cat);
-    });
-
-    return map;
-  }, [categoriesData]);
-
-  // =====================================================
-  // TAMBAHKAN INFORMASI CATEGORY KE PRODUCT
-  // =====================================================
-
-  const productsWithCategory = useMemo(() => {
-    return products.map((product) => {
-      const categoryData =
-        categoryMap.get(
-          String(product.category_id)
-        );
-
-      return {
-        ...product,
-
-        category:
-          categoryData?.name ||
-          product.category ||
-          "",
-
-        category_slug:
-          categoryData?.slug ||
-          "",
-      };
-    });
-  }, [products, categoryMap]);
 
   // =====================================================
   // CATEGORY LIST
@@ -182,50 +171,46 @@ export default function Products() {
   }, [category, categories]);
 
   // =====================================================
-  // FILTER PRODUCT
+  // FILTER + SORT
   // =====================================================
 
   const filtered = useMemo(() => {
     const search = normalize(query);
-
     const selectedCategory =
       normalize(activeCategory);
 
-    let result =
-      productsWithCategory.filter(
-        (product) => {
-          const productCategory =
-            normalize(product.category);
+    let result = products.filter((product) => {
+      const categoryName =
+        product.categories?.name ||
+        product.category ||
+        "";
 
-          const searchable = [
-            product.name,
-            product.category,
-            product.description,
-          ]
-            .filter(Boolean)
-            .join(" ");
+      const searchable = [
+        product.name,
+        categoryName,
+        product.description,
+      ]
+        .filter(Boolean)
+        .join(" ");
 
-          const matchesSearch =
-            !search ||
-            normalize(searchable).includes(
-              search
-            );
+      const matchesSearch =
+        !search ||
+        normalize(searchable).includes(search);
 
-          const matchesCategory =
-            selectedCategory === "semua" ||
-            productCategory ===
-              selectedCategory;
+      const matchesCategory =
+        selectedCategory === "semua" ||
+        normalize(categoryName) ===
+          selectedCategory;
 
-          return (
-            matchesSearch &&
-            matchesCategory
-          );
-        }
+      return (
+        matchesSearch &&
+        matchesCategory
       );
+    });
 
-    // ===================================================
+    // -------------------------------------------------
     // SORT
-    // ===================================================
+    // -------------------------------------------------
 
     if (sort === "low") {
       result.sort(
@@ -253,7 +238,7 @@ export default function Products() {
 
     return result;
   }, [
-    productsWithCategory,
+    products,
     query,
     activeCategory,
     sort,
@@ -286,8 +271,7 @@ export default function Products() {
 
   useEffect(() => {
     const urlCategory =
-      params.get("category") ||
-      "Semua";
+      params.get("category") || "Semua";
 
     setCategory(urlCategory);
   }, [params]);
@@ -319,9 +303,9 @@ export default function Products() {
       <section className="section">
         <div className="container">
 
-          <div className="filter-bar">
+          {/* FILTER BAR */}
 
-            {/* SEARCH */}
+          <div className="filter-bar">
 
             <label className="search-box">
               <Search size={18} />
@@ -329,21 +313,15 @@ export default function Products() {
               <input
                 value={query}
                 onChange={(e) =>
-                  setQuery(
-                    e.target.value
-                  )
+                  setQuery(e.target.value)
                 }
                 placeholder="Cari produk..."
               />
             </label>
 
-            {/* FILTER */}
-
             <div className="filter-group">
 
-              <SlidersHorizontal
-                size={17}
-              />
+              <SlidersHorizontal size={17} />
 
               <select
                 value={activeCategory}
@@ -353,24 +331,20 @@ export default function Products() {
                   )
                 }
               >
-                {categories.map(
-                  (item) => (
-                    <option
-                      key={item}
-                      value={item}
-                    >
-                      {item}
-                    </option>
-                  )
-                )}
+                {categories.map((item) => (
+                  <option
+                    key={item}
+                    value={item}
+                  >
+                    {item}
+                  </option>
+                ))}
               </select>
 
               <select
                 value={sort}
                 onChange={(e) =>
-                  setSort(
-                    e.target.value
-                  )
+                  setSort(e.target.value)
                 }
               >
                 <option value="newest">
@@ -412,14 +386,12 @@ export default function Products() {
 
             <div className="product-grid">
 
-              {filtered.map(
-                (product) => (
-                  <ProductCard
-                    key={product.id}
-                    product={product}
-                  />
-                )
-              )}
+              {filtered.map((product) => (
+                <ProductCard
+                  key={product.id}
+                  product={product}
+                />
+              ))}
 
             </div>
 

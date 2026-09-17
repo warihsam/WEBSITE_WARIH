@@ -2,24 +2,20 @@ import { Link } from "react-router-dom";
 import { ArrowUpRight } from "lucide-react";
 import { formatRupiah } from "../utils/format";
 
-export default function ProductCard({
-  product,
-}) {
-  const image =
-    product.image_url ||
-    product.image ||
-    "";
+export default function ProductCard({ product }) {
+  if (!product) return null;
 
-  const category =
+  const imageUrl = product.image_url;
+
+  const categoryName =
+    product.categories?.name ||
     product.category ||
     "Fashion";
 
-  const isFeatured =
-    product.is_featured === true ||
-    product.featured === true;
+  const stock = Number(product.stock ?? 0);
 
-  const stock =
-    Number(product.stock || 0);
+  const isFeatured =
+    product.is_featured === true;
 
   return (
     <article className="product-card">
@@ -29,11 +25,29 @@ export default function ProductCard({
         className="product-image-wrap"
       >
 
-        {image ? (
+        {imageUrl ? (
           <img
-            src={image}
+            src={imageUrl}
             alt={product.name}
             loading="lazy"
+            className="product-image"
+            onLoad={() => {
+              console.log(
+                "PRODUCT IMAGE LOADED:",
+                product.name,
+                imageUrl
+              );
+            }}
+            onError={(e) => {
+              console.error(
+                "PRODUCT IMAGE ERROR:",
+                product.name,
+                imageUrl
+              );
+
+              e.currentTarget.style.display =
+                "none";
+            }}
           />
         ) : (
           <div className="image-placeholder">
@@ -62,21 +76,17 @@ export default function ProductCard({
       <div className="product-meta">
 
         <div>
-
           <p className="eyebrow">
-            {category}
+            {categoryName}
           </p>
 
           <h3>
             {product.name}
           </h3>
-
         </div>
 
         <strong>
-          {formatRupiah(
-            product.price
-          )}
+          {formatRupiah(product.price)}
         </strong>
 
       </div>

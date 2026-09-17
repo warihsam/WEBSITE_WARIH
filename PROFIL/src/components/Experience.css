@@ -1,0 +1,62 @@
+.experience { position:relative; padding:150px clamp(20px,5vw,72px); background:var(--black); color:var(--white); overflow:hidden; }
+.experience-container { width:min(100%,var(--max)); margin:0 auto; }
+.experience-header { max-width:850px; margin-bottom:65px; }
+.experience-eyebrow { display:flex; align-items:center; gap:10px; margin-bottom:16px; font:500 9px/1 "DM Mono",monospace; letter-spacing:.14em; color:#888; }
+.experience-header h2 { font-size:clamp(54px,7vw,95px); line-height:.88; letter-spacing:-.06em; }
+.experience-header p { margin-top:25px; font-size:14px; line-height:1.8; color:#999; }
+.experience-wrapper { display:grid; grid-template-columns:60px 1fr; gap:25px; }
+.experience-marker { display:flex; justify-content:center; }
+.experience-marker-icon { width:42px; height:42px; display:flex; align-items:center; justify-content:center; border:1px solid rgba(244,243,239,.18); border-radius:50%; }
+.experience-card { padding:35px; border:1px solid rgba(244,243,239,.15); }
+.experience-top { display:flex; justify-content:space-between; align-items:center; gap:20px; }
+.experience-date { display:flex; align-items:center; gap:8px; font:500 8px/1 "DM Mono",monospace; letter-spacing:.1em; color:#888; }
+.experience-date i { width:4px; height:4px; border-radius:50%; background:currentColor; }
+.experience-label { padding:6px 9px; border:1px solid rgba(244,243,239,.18); font:500 7px/1 "DM Mono",monospace; letter-spacing:.12em; color:#888; }
+.experience-company { display:flex; align-items:center; gap:18px; margin-top:38px; }
+.company-icon { width:55px; height:55px; display:flex; align-items:center; justify-content:center; flex:0 0 55px; border:1px solid rgba(244,243,239,.18); border-radius:50%; }
+.experience-company h3 { font-size:clamp(28px,4vw,50px); line-height:1; letter-spacing:-.05em; }
+.experience-company-link {
+  display:flex;
+  align-items:center;
+  gap:14px;
+  color:inherit;
+  text-decoration:none;
+}
+
+.experience-company-link h3 {
+  margin:0;
+  transition:opacity .25s var(--ease);
+}
+
+.experience-company-link svg {
+  flex-shrink:0;
+  color:#777;
+  opacity:.55;
+  transition:
+    transform .25s var(--ease),
+    opacity .25s var(--ease);
+}
+
+.experience-company-link:hover h3 {
+  opacity:.65;
+}
+
+.experience-company-link:hover svg {
+  opacity:1;
+  transform:translate(3px,-3px);
+}
+.experience-division { margin-top:7px; font-size:11px; color:#888; }
+.experience-description { max-width:800px; margin-top:28px; font-size:13px; line-height:1.85; color:#aaa; }
+.experience-projects { margin-top:38px; }
+.projects-title { display:flex; gap:10px; margin-bottom:15px; font:500 8px/1 "DM Mono",monospace; letter-spacing:.12em; color:#777; }
+.project-list { border-top:1px solid rgba(244,243,239,.12); }
+.experience-project { display:grid; grid-template-columns:35px 1fr auto; gap:15px; align-items:center; padding:16px 0; border-bottom:1px solid rgba(244,243,239,.12); transition:padding-left .25s ease; }
+.experience-project:hover { padding-left:8px; }
+.experience-project>span { font:500 7px/1 "DM Mono",monospace; color:#777; }
+.experience-project p { font-size:11px; line-height:1.6; color:#bbb; }
+.experience-project svg { color:#777; }
+.experience-footer { display:flex; justify-content:space-between; align-items:center; margin-top:25px; padding-top:18px; border-top:1px solid rgba(244,243,239,.12); font:500 7px/1 "DM Mono",monospace; letter-spacing:.12em; color:#777; }
+.experience-note { display:grid; grid-template-columns:60px 1fr; gap:20px; max-width:800px; margin:55px 0 0 85px; padding-top:22px; border-top:1px solid rgba(244,243,239,.12); }
+.experience-note-number,.experience-note span { font:500 8px/1 "DM Mono",monospace; letter-spacing:.12em; color:#777; }
+.experience-note p { margin-top:10px; max-width:600px; font-size:12px; line-height:1.8; color:#999; }
+@media(max-width:800px){.experience{padding:105px 20px 90px}.experience-wrapper{grid-template-columns:43px 1fr}.experience-card{padding:24px}.experience-top{align-items:flex-start;flex-direction:column}.experience-company{align-items:flex-start}.company-icon{width:45px;height:45px;flex-basis:45px}.experience-note{grid-template-columns:43px 1fr;margin-left:43px}}

@@ -1,70 +1,80 @@
-import { motion } from "framer-motion";
-import { ArrowDown, ArrowUpRight } from "lucide-react";
+import { ArrowDown, ArrowUpRight, Mail } from "lucide-react";
 
 function Hero() {
   return (
     <section className="hero" id="home">
+      {/* ==============================
+          TOP LABEL
+      ============================== */}
       <div className="hero-top">
-        <span>PORTFOLIO — 2026</span>
-        <span>JUNIOR WEB DEVELOPER</span>
+        <span>Portfolio / 2026</span>
+        <span>WARIH SETO SAMUDRA / RPL</span>
       </div>
 
+      {/* ==============================
+          MAIN CONTENT
+      ============================== */}
       <div className="hero-content">
-        <motion.div
-          className="hero-title"
-          initial={{ opacity: 0, y: 40 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-        >
-          <p className="eyebrow">HELLO, I'M</p>
+        {/* LEFT */}
+        <div className="hero-title">
+          <p className="eyebrow">REKAYASA PERANGKAT LUNAK / PROFILE</p>
 
           <h1>
-            WARIH
+            Warih
             <br />
-            <em>SETO</em>
+            <em>Seto</em>
             <br />
-            SAMUDRA
+            Samudra.
           </h1>
-        </motion.div>
 
-        <motion.div
-          className="hero-photo"
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.8, delay: 0.2 }}
-        >
+          <p className="hero-intro">
+            Siswa SMK Negeri 1 Jenangan dari Jurusan Rekayasa Perangkat Lunak
+            yang memiliki minat pada pengembangan perangkat lunak,
+            pemrograman, basis data, dan teknologi informasi.
+          </p>
+        </div>
+
+        {/* RIGHT / PHOTO */}
+        <div className="hero-photo">
           <div className="photo-frame">
             <img
-              src="/profile.jpg"
+              src="/profile.png"
               alt="Warih Seto Samudra"
             />
           </div>
 
           <p>
-            Pelajar Rekayasa Perangkat Lunak
+            Portrait / Warih Seto Samudra
             <br />
-            SMKN 1 Jenangan
+            XII RPL / PKL — PT INKA (Persero)
           </p>
-        </motion.div>
+        </div>
       </div>
 
+      {/* ==============================
+          BOTTOM INFORMATION
+      ============================== */}
       <div className="hero-bottom">
         <div>
-          <strong>PKL</strong>
-          <span>PT INKA (PERSERO)</span>
+          <span>Based in</span>
+          <strong>Pulung, Ponorogo</strong>
+          <span>Jawa Timur, Indonesia</span>
         </div>
 
-        <a href="#about" className="scroll-down">
-          SCROLL TO EXPLORE
-          <ArrowDown size={18} />
+        <div>
+          <span>Education</span>
+          <strong>SMK Negeri 1 Jenangan</strong>
+          <span>Rekayasa Perangkat Lunak</span>
+        </div>
+
+        <a className="scroll-down" href="#about">
+          <span>Scroll to explore</span>
+          <ArrowDown size={15} strokeWidth={1.4} />
         </a>
 
-        <a
-          href="#project"
-          className="hero-project-link"
-        >
-          VIEW PROJECT
-          <ArrowUpRight size={18} />
+        <a className="hero-project-link" href="#project">
+          <span>View projects</span>
+          <ArrowUpRight size={15} strokeWidth={1.4} />
         </a>
       </div>
     </section>

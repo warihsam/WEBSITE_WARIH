@@ -1,0 +1,161 @@
+.professional-section {
+  position: relative;
+
+  padding: 150px clamp(20px, 5vw, 72px);
+
+  background: var(--black);
+  color: var(--white);
+
+  overflow: hidden;
+}
+
+.professional-container {
+  width: min(100%, var(--max));
+  margin: 0 auto;
+}
+
+.professional-header {
+  max-width: 900px;
+  margin-bottom: 65px;
+}
+
+.section-eyebrow {
+  display: inline-flex;
+
+  margin-bottom: 18px;
+
+  font:
+    500 9px/1 "DM Mono",
+    monospace;
+
+  letter-spacing: .14em;
+  color: #888;
+}
+
+.professional-header h2 {
+  max-width: 900px;
+
+  font-size: clamp(48px, 7vw, 94px);
+  line-height: .9;
+  letter-spacing: -.06em;
+}
+
+.professional-header h2 em {
+  font-family: "Playfair Display", Georgia, serif;
+  font-style: italic;
+  font-weight: 400;
+}
+
+.professional-header p {
+  max-width: 720px;
+
+  margin-top: 24px;
+
+  color: #aaa;
+
+  font-size: 14px;
+  line-height: 1.85;
+}
+
+.professional-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+
+  border-top: 1px solid rgba(244,243,239,.14);
+  border-left: 1px solid rgba(244,243,239,.14);
+}
+
+.professional-card {
+  min-height: 180px;
+
+  padding: 25px;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+
+  gap: 30px;
+
+  border-right: 1px solid rgba(244,243,239,.14);
+  border-bottom: 1px solid rgba(244,243,239,.14);
+
+  transition:
+    background .3s ease,
+    transform .3s var(--ease);
+}
+
+.professional-card:hover {
+  background: rgba(244,243,239,.035);
+  transform: translateY(-3px);
+}
+
+.professional-card-number {
+  font:
+    500 8px/1 "DM Mono",
+    monospace;
+
+  color: #777;
+}
+
+.professional-icon {
+  width: 42px;
+  height: 42px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 1px solid rgba(244,243,239,.16);
+  border-radius: 50%;
+
+  color: #bbb;
+}
+
+.profile-globe-icon {
+  font-size: 22px;
+  color: #bbb;
+}
+
+.professional-card-content span {
+  display: block;
+
+  margin-bottom: 8px;
+
+  font:
+    500 8px/1 "DM Mono",
+    monospace;
+
+  letter-spacing: .12em;
+  color: #777;
+}
+
+.professional-card-content strong {
+  display: block;
+
+  font-size: 15px;
+  line-height: 1.35;
+}
+
+@media (max-width: 900px) {
+  .professional-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 800px) {
+  .professional-section {
+    padding: 105px 20px 90px;
+  }
+
+  .professional-header {
+    margin-bottom: 50px;
+  }
+
+  .professional-header h2 {
+    font-size: clamp(45px, 12vw, 75px);
+  }
+
+  .professional-grid {
+    grid-template-columns: 1fr;
+  }
+}

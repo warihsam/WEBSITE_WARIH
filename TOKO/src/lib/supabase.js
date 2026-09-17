@@ -8,13 +8,13 @@ const supabasePublishableKey =
 
 if (!supabaseUrl) {
   console.warn(
-    "VITE_SUPABASE_URL belum diisi."
+    "https://koqplflfgheuyacqhbbo.supabase.co"
   );
 }
 
 if (!supabasePublishableKey) {
   console.warn(
-    "VITE_SUPABASE_PUBLISHABLE_KEY belum diisi."
+    "sb_publishable_tc7B_WFjQB46JPGdb30umA_osSYme6l"
   );
 }
 

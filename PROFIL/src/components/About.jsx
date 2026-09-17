@@ -7,33 +7,35 @@ function About() {
 
       <div className="section-heading">
         <p>ABOUT ME</p>
-        <h2>Tentang<br />Saya.</h2>
+        <h2>
+          Tentang
+          <br />
+          <em>Saya.</em>
+        </h2>
       </div>
 
       <motion.div
         className="about-content"
         initial={{ opacity: 0, y: 30 }}
         whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true }}
+        viewport={{ once: true, amount: 0.2 }}
+        transition={{ duration: 0.7, ease: "easeOut" }}
       >
         <p className="large-text">
-          Saya adalah siswa kelas XII jurusan
-          Rekayasa Perangkat Lunak di
-          <strong> SMKN 1 Jenangan.</strong>
+          Saya merupakan siswa kelas XII jurusan <strong>Rekayasa Perangkat
+          Lunak (RPL)</strong> di <strong>SMKN 1 Jenangan.</strong>
         </p>
 
         <p>
-          Saya memiliki ketertarikan pada pengembangan
-          website, antarmuka pengguna, pengolahan data,
-          serta pembuatan sistem yang dapat membantu
-          menyelesaikan kebutuhan di dunia kerja.
+          Sebagai siswa RPL, saya mempelajari pemrograman, pengembangan
+          website, database, UI/UX, pengolahan data, dan pengembangan aplikasi.
         </p>
 
         <p>
-          Melalui kegiatan Praktik Kerja Lapangan di
-          PT INKA (Persero), saya mendapatkan pengalaman
-          untuk menerapkan kemampuan pemrograman dalam
-          sebuah project nyata.
+          Melalui kegiatan Praktik Kerja Lapangan (PKL) di{" "}
+          <strong>PT INKA (Persero)</strong>, saya mendapatkan kesempatan untuk
+          menerapkan kemampuan tersebut dalam lingkungan kerja dan industri
+          secara langsung.
         </p>
       </motion.div>
     </section>
