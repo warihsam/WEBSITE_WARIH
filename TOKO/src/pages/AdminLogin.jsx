@@ -1,113 +1,417 @@
-import { useEffect, useState } from "react";
-import { LockKeyhole } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import React, {
+  useEffect,
+  useState,
+} from "react";
+
+import {
+  Eye,
+  EyeOff,
+  Loader2,
+  LockKeyhole,
+  LogIn,
+  Mail,
+  ShieldCheck,
+} from "lucide-react";
+
+import {
+  Navigate,
+  useNavigate,
+} from "react-router-dom";
+
 import { useAuth } from "../context/AuthContext";
 
 export default function AdminLogin() {
-  const { user, isAdmin, signIn } = useAuth();
-  const navigate = useNavigate();
+  const {
+    user,
+    isAdmin,
+    loading,
+    login,
+  } = useAuth();
 
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
+  const navigate =
+    useNavigate();
+
+  const [email, setEmail] =
+    useState("");
+
+  const [password, setPassword] =
+    useState("");
+
+  const [showPassword, setShowPassword] =
+    useState(false);
+
+  const [submitting, setSubmitting] =
+    useState(false);
+
+  const [error, setError] =
+    useState("");
+
+  // =========================================================
+  // JIKA SUDAH LOGIN SEBAGAI ADMIN
+  // =========================================================
 
   useEffect(() => {
-    if (user && isAdmin) {
-      navigate("/admin", { replace: true });
+    if (
+      !loading &&
+      user &&
+      isAdmin
+    ) {
+      navigate("/admin", {
+        replace: true,
+      });
     }
-  }, [user, isAdmin, navigate]);
+  }, [
+    loading,
+    user,
+    isAdmin,
+    navigate,
+  ]);
+
+  // =========================================================
+  // SUBMIT LOGIN
+  // =========================================================
 
   async function submit(e) {
     e.preventDefault();
 
-    setError("");
-
-    const cleanEmail = email.trim();
-
-    if (!cleanEmail || !password) {
-      setError("Email dan password wajib diisi.");
+    if (submitting) {
       return;
     }
 
-    setLoading(true);
+    setError("");
+
+    const cleanEmail =
+      email.trim();
+
+    if (!cleanEmail) {
+      setError(
+        "Email wajib diisi."
+      );
+
+      return;
+    }
+
+    if (!password) {
+      setError(
+        "Password wajib diisi."
+      );
+
+      return;
+    }
 
     try {
-      const { error: authError } = await signIn(cleanEmail, password);
+      setSubmitting(true);
 
-      if (authError) {
-        console.error("Supabase Login Error:", authError);
-        setError(authError.message || "Email atau password salah.");
+      // PENTING:
+      // AuthContext menggunakan login(),
+      // bukan signIn().
+
+      const result =
+        await login(
+          cleanEmail,
+          password
+        );
+
+      console.log(
+        "ADMIN LOGIN RESULT:",
+        result
+      );
+
+      /*
+       * AuthContext biasanya sudah
+       * mengembalikan user/profile.
+       *
+       * Kita cek role admin setelah
+       * login berhasil.
+       */
+
+      if (
+        result?.profile &&
+        result.profile.role &&
+        result.profile.role !==
+          "admin"
+      ) {
+        setError(
+          "Akun ini bukan akun admin."
+        );
+
         return;
       }
 
-      // AuthContext akan memperbarui user.
-      // useEffect di atas akan mengarahkan ke /admin.
-    } catch (err) {
-      console.error("Login Error:", err);
+      /*
+       * Jika login berhasil tetapi
+       * profile belum langsung tersedia,
+       * beri waktu AuthContext memproses
+       * INITIAL_SESSION/AUTH event.
+       */
+
+      navigate("/admin", {
+        replace: true,
+      });
+    } catch (error) {
+      console.error(
+        "ADMIN LOGIN ERROR:",
+        error
+      );
+
       setError(
-        err?.message || "Terjadi kesalahan saat login. Silakan coba lagi."
+        error?.message ||
+          "Login admin gagal. Periksa email dan password."
       );
     } finally {
-      setLoading(false);
+      setSubmitting(false);
     }
   }
 
-  return (
-    <main className="admin-login">
-      <div className="admin-login-card">
-        <div className="admin-mark">
-          <LockKeyhole size={22} />
+  // =========================================================
+  // LOADING AUTH
+  // =========================================================
+
+  if (loading) {
+    return (
+      <main className="admin-login-page">
+
+        <div className="admin-login-loading">
+
+          <Loader2
+            size={30}
+            className="admin-login-spin"
+          />
+
+          <p>
+            Memeriksa sesi...
+          </p>
+
         </div>
 
-        <p className="eyebrow">WS FASHION / ADMIN</p>
+      </main>
+    );
+  }
 
-        <h1>Welcome back.</h1>
+  // =========================================================
+  // SUDAH ADMIN
+  // =========================================================
 
-        <p className="muted">
-          Login menggunakan akun admin Supabase.
+  if (
+    user &&
+    isAdmin
+  ) {
+    return (
+      <Navigate
+        to="/admin"
+        replace
+      />
+    );
+  }
+
+  // =========================================================
+  // VIEW
+  // =========================================================
+
+  return (
+    <main className="admin-login-page">
+
+      <div className="admin-login-wrapper">
+
+        {/* LOGO */}
+
+        <div className="admin-login-logo">
+          WS
+        </div>
+
+        <p className="admin-login-brand">
+          WS FASHION
         </p>
 
-        <form onSubmit={submit}>
-          <label>
-            Email
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="admin@email.com"
-              autoComplete="email"
-              required
-            />
-          </label>
+        {/* CARD */}
 
-          <label>
-            Password
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Password"
-              autoComplete="current-password"
-              required
-            />
-          </label>
+        <section className="admin-login-card">
+
+          <div className="admin-login-heading">
+
+            <div className="admin-login-icon">
+              <ShieldCheck
+                size={24}
+              />
+            </div>
+
+            <div>
+              <p className="admin-login-eyebrow">
+                ADMIN ACCESS
+              </p>
+
+              <h1>
+                Admin Login
+              </h1>
+
+              <p>
+                Masuk ke dashboard
+                administrasi WS Fashion.
+              </p>
+            </div>
+
+          </div>
+
+          {/* ERROR */}
 
           {error && (
-            <div className="error-box">
+            <div
+              className="admin-login-error"
+              role="alert"
+            >
               {error}
             </div>
           )}
 
-          <button
-            type="submit"
-            className="button dark wide"
-            disabled={loading}
+          {/* FORM */}
+
+          <form
+            onSubmit={submit}
+            className="admin-login-form"
           >
-            {loading ? "Memproses..." : "Login Admin"}
-          </button>
-        </form>
+
+            {/* EMAIL */}
+
+            <label>
+
+              <span>
+                Email Admin
+              </span>
+
+              <div className="admin-login-input">
+
+                <Mail
+                  size={18}
+                />
+
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) =>
+                    setEmail(
+                      e.target.value
+                    )
+                  }
+                  placeholder="admin@example.com"
+                  autoComplete="email"
+                  disabled={
+                    submitting
+                  }
+                  required
+                />
+
+              </div>
+
+            </label>
+
+            {/* PASSWORD */}
+
+            <label>
+
+              <span>
+                Password
+              </span>
+
+              <div className="admin-login-input">
+
+                <LockKeyhole
+                  size={18}
+                />
+
+                <input
+                  type={
+                    showPassword
+                      ? "text"
+                      : "password"
+                  }
+                  value={password}
+                  onChange={(e) =>
+                    setPassword(
+                      e.target.value
+                    )
+                  }
+                  placeholder="Masukkan password"
+                  autoComplete="current-password"
+                  disabled={
+                    submitting
+                  }
+                  required
+                />
+
+                <button
+                  type="button"
+                  className="admin-password-toggle"
+                  onClick={() =>
+                    setShowPassword(
+                      (value) =>
+                        !value
+                    )
+                  }
+                  disabled={
+                    submitting
+                  }
+                  aria-label={
+                    showPassword
+                      ? "Sembunyikan password"
+                      : "Tampilkan password"
+                  }
+                >
+                  {showPassword ? (
+                    <EyeOff
+                      size={18}
+                    />
+                  ) : (
+                    <Eye
+                      size={18}
+                    />
+                  )}
+                </button>
+
+              </div>
+
+            </label>
+
+            {/* SUBMIT */}
+
+            <button
+              type="submit"
+              className="admin-login-button"
+              disabled={
+                submitting
+              }
+            >
+
+              {submitting ? (
+                <>
+                  <Loader2
+                    size={18}
+                    className="admin-login-spin"
+                  />
+
+                  Memproses...
+                </>
+              ) : (
+                <>
+                  <LogIn
+                    size={18}
+                  />
+
+                  Masuk Dashboard
+                </>
+              )}
+
+            </button>
+
+          </form>
+
+        </section>
+
+        <p className="admin-login-footer">
+          WS Fashion Admin System
+        </p>
+
       </div>
+
     </main>
   );
 }

@@ -1,17 +1,29 @@
 import { useEffect, useMemo, useState } from "react";
+
 import {
+  CalendarDays,
+  FileDown,
   ImagePlus,
   LogOut,
   Package,
   Pencil,
   Plus,
+  RefreshCw,
   ShoppingBag,
   Trash2,
   X,
 } from "lucide-react";
+
 import { supabase } from "../lib/supabase";
 import { useAuth } from "../context/AuthContext";
 import { formatDate, formatRupiah } from "../utils/format";
+
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
+
+// =========================================================
+// PRODUCT DEFAULT
+// =========================================================
 
 const emptyProduct = {
   name: "",
@@ -38,7 +50,18 @@ const ALLOWED_IMAGE_TYPES = [
 ];
 
 export default function AdminDashboard() {
-  const { profile, signOut } = useAuth();
+  // =========================================================
+  // AUTH
+  // =========================================================
+
+  const {
+    profile,
+    logout,
+  } = useAuth();
+
+  // =========================================================
+  // STATE
+  // =========================================================
 
   const [tab, setTab] = useState("products");
 
@@ -46,7 +69,10 @@ export default function AdminDashboard() {
   const [orders, setOrders] = useState([]);
   const [categories, setCategories] = useState([]);
 
-  const [form, setForm] = useState(emptyProduct);
+  const [form, setForm] = useState({
+    ...emptyProduct,
+  });
+
   const [editing, setEditing] = useState(null);
 
   const [file, setFile] = useState(null);
@@ -54,14 +80,33 @@ export default function AdminDashboard() {
   const [saving, setSaving] = useState(false);
 
   // =========================================================
+  // ORDER REPORT
+  // =========================================================
+
+  const [orderPeriod, setOrderPeriod] =
+    useState("monthly");
+
+  const [exportingPDF, setExportingPDF] =
+    useState(false);
+
+  // =========================================================
   // LOAD DATA
   // =========================================================
 
   async function load() {
     const [
-      { data: productsData, error: productsError },
-      { data: ordersData, error: ordersError },
-      { data: categoriesData, error: categoriesError },
+      {
+        data: productsData,
+        error: productsError,
+      },
+      {
+        data: ordersData,
+        error: ordersError,
+      },
+      {
+        data: categoriesData,
+        error: categoriesError,
+      },
     ] = await Promise.all([
       supabase
         .from("products")
@@ -73,32 +118,56 @@ export default function AdminDashboard() {
             slug
           )
         `)
-        .order("created_at", { ascending: false }),
+        .order("created_at", {
+          ascending: false,
+        }),
 
       supabase
         .from("orders")
         .select("*")
-        .order("created_at", { ascending: false }),
+        .order("created_at", {
+          ascending: false,
+        }),
 
       supabase
         .from("categories")
         .select("id, name, slug")
-        .order("name", { ascending: true }),
+        .order("name", {
+          ascending: true,
+        }),
     ]);
 
     if (productsError) {
-      console.error("LOAD PRODUCTS ERROR:", productsError);
-      setMessage(`Gagal memuat produk: ${productsError.message}`);
+      console.error(
+        "LOAD PRODUCTS ERROR:",
+        productsError
+      );
+
+      setMessage(
+        `Gagal memuat produk: ${productsError.message}`
+      );
     }
 
     if (ordersError) {
-      console.error("LOAD ORDERS ERROR:", ordersError);
-      setMessage(`Gagal memuat order: ${ordersError.message}`);
+      console.error(
+        "LOAD ORDERS ERROR:",
+        ordersError
+      );
+
+      setMessage(
+        `Gagal memuat order: ${ordersError.message}`
+      );
     }
 
     if (categoriesError) {
-      console.error("LOAD CATEGORIES ERROR:", categoriesError);
-      setMessage(`Gagal memuat kategori: ${categoriesError.message}`);
+      console.error(
+        "LOAD CATEGORIES ERROR:",
+        categoriesError
+      );
+
+      setMessage(
+        `Gagal memuat kategori: ${categoriesError.message}`
+      );
     }
 
     setProducts(productsData || []);
@@ -111,25 +180,144 @@ export default function AdminDashboard() {
   }, []);
 
   // =========================================================
-  // REVENUE
+  // GLOBAL REVENUE
   // =========================================================
 
-  const revenue = useMemo(
-    () =>
-      orders
-        .filter((order) => order.status !== "cancelled")
-        .reduce(
-          (sum, order) => sum + Number(order.total || 0),
+  const revenue = useMemo(() => {
+    return orders
+      .filter(
+        (order) =>
+          order.status !== "cancelled"
+      )
+      .reduce(
+        (sum, order) =>
+          sum + Number(order.total || 0),
+        0
+      );
+  }, [orders]);
+
+  // =========================================================
+  // FILTER ORDER REPORT
+  // =========================================================
+
+  const filteredOrders = useMemo(() => {
+    const now = new Date();
+
+    return orders.filter((order) => {
+      const orderDate = new Date(
+        order.created_at
+      );
+
+      if (
+        Number.isNaN(
+          orderDate.getTime()
+        )
+      ) {
+        return false;
+      }
+
+      // -----------------------------------------------------
+      // WEEKLY
+      // 7 HARI TERAKHIR
+      // -----------------------------------------------------
+
+      if (orderPeriod === "weekly") {
+        const startDate = new Date(now);
+
+        startDate.setDate(
+          now.getDate() - 6
+        );
+
+        startDate.setHours(
+          0,
+          0,
+          0,
           0
-        ),
-    [orders]
-  );
+        );
+
+        return orderDate >= startDate;
+      }
+
+      // -----------------------------------------------------
+      // MONTHLY
+      // BULAN BERJALAN
+      // -----------------------------------------------------
+
+      if (orderPeriod === "monthly") {
+        return (
+          orderDate.getMonth() ===
+            now.getMonth() &&
+          orderDate.getFullYear() ===
+            now.getFullYear()
+        );
+      }
+
+      // -----------------------------------------------------
+      // YEARLY
+      // TAHUN BERJALAN
+      // -----------------------------------------------------
+
+      if (orderPeriod === "yearly") {
+        return (
+          orderDate.getFullYear() ===
+          now.getFullYear()
+        );
+      }
+
+      return true;
+    });
+  }, [orders, orderPeriod]);
+
+  // =========================================================
+  // FILTERED REVENUE
+  // =========================================================
+
+  const filteredRevenue = useMemo(() => {
+    return filteredOrders
+      .filter(
+        (order) =>
+          order.status !== "cancelled"
+      )
+      .reduce(
+        (sum, order) =>
+          sum + Number(order.total || 0),
+        0
+      );
+  }, [filteredOrders]);
+
+  // =========================================================
+  // ORDER STATISTICS
+  // =========================================================
+
+  const completedOrders = useMemo(() => {
+    return filteredOrders.filter(
+      (order) =>
+        order.status === "completed"
+    ).length;
+  }, [filteredOrders]);
+
+  const pendingOrders = useMemo(() => {
+    return filteredOrders.filter(
+      (order) =>
+        order.status === "pending"
+    ).length;
+  }, [filteredOrders]);
+
+  const cancelledOrders = useMemo(() => {
+    return filteredOrders.filter(
+      (order) =>
+        order.status === "cancelled"
+    ).length;
+  }, [filteredOrders]);
 
   // =========================================================
   // FORM HANDLER
   // =========================================================
 
-  function updateForm(field, value) {
+  function updateForm(
+    field,
+    value
+  ) {
     setForm((current) => ({
       ...current,
       [field]: value,
@@ -145,29 +333,45 @@ export default function AdminDashboard() {
 
     setForm({
       name: product.name || "",
-      category_id: product.category_id || "",
-      price: product.price ?? "",
-      compare_price: product.compare_price ?? "",
-      description: product.description || "",
 
-      sizes: Array.isArray(product.sizes)
-        ? product.sizes.join(",")
-        : "",
+      category_id:
+        product.category_id || "",
 
-      colors: Array.isArray(product.colors)
-        ? product.colors.join(",")
-        : "",
+      price:
+        product.price ?? "",
 
-      stock: product.stock ?? 0,
-      sku: product.sku || "",
-      image_url: product.image_url || "",
+      compare_price:
+        product.compare_price ?? "",
+
+      description:
+        product.description || "",
+
+      sizes:
+        Array.isArray(product.sizes)
+          ? product.sizes.join(",")
+          : "",
+
+      colors:
+        Array.isArray(product.colors)
+          ? product.colors.join(",")
+          : "",
+
+      stock:
+        product.stock ?? 0,
+
+      sku:
+        product.sku || "",
+
+      image_url:
+        product.image_url || "",
 
       is_active:
         product.is_active === undefined
           ? true
           : !!product.is_active,
 
-      is_featured: !!product.is_featured,
+      is_featured:
+        !!product.is_featured,
     });
 
     setFile(null);
@@ -180,12 +384,16 @@ export default function AdminDashboard() {
   }
 
   // =========================================================
-  // RESET
+  // RESET FORM
   // =========================================================
 
   function resetForm() {
     setEditing(null);
-    setForm({ ...emptyProduct });
+
+    setForm({
+      ...emptyProduct,
+    });
+
     setFile(null);
     setMessage("");
   }
@@ -194,18 +402,29 @@ export default function AdminDashboard() {
   // VALIDATE IMAGE
   // =========================================================
 
-  function validateImage(selectedFile) {
+  function validateImage(
+    selectedFile
+  ) {
     if (!selectedFile) {
-      throw new Error("File gambar tidak ditemukan.");
+      throw new Error(
+        "File gambar tidak ditemukan."
+      );
     }
 
-    if (!ALLOWED_IMAGE_TYPES.includes(selectedFile.type)) {
+    if (
+      !ALLOWED_IMAGE_TYPES.includes(
+        selectedFile.type
+      )
+    ) {
       throw new Error(
         "Format gambar tidak didukung. Gunakan JPG, PNG, WEBP, atau GIF."
       );
     }
 
-    if (selectedFile.size > MAX_IMAGE_SIZE) {
+    if (
+      selectedFile.size >
+      MAX_IMAGE_SIZE
+    ) {
       throw new Error(
         "Ukuran gambar maksimal 5 MB."
       );
@@ -217,40 +436,57 @@ export default function AdminDashboard() {
   // =========================================================
 
   async function uploadImage() {
-    // Tidak memilih gambar baru
     if (!file) {
-      return form.image_url?.trim() || "";
+      return (
+        form.image_url?.trim() ||
+        ""
+      );
     }
 
     validateImage(file);
 
     const extension =
-      file.name.split(".").pop()?.toLowerCase() || "jpg";
+      file.name
+        .split(".")
+        .pop()
+        ?.toLowerCase() ||
+      "jpg";
 
     const uniqueId =
       typeof crypto !== "undefined" &&
-      typeof crypto.randomUUID === "function"
+      typeof crypto.randomUUID ===
+        "function"
         ? crypto.randomUUID()
         : `${Date.now()}-${Math.random()
             .toString(36)
             .slice(2)}`;
 
-    const path = `products/${Date.now()}-${uniqueId}.${extension}`;
+    const path =
+      `products/${Date.now()}-${uniqueId}.${extension}`;
 
-    console.log("UPLOAD START:", {
-      bucket: "product-images",
-      path,
-      type: file.type,
-      size: file.size,
-    });
+    console.log(
+      "UPLOAD START:",
+      {
+        bucket: "product-images",
+        path,
+        type: file.type,
+        size: file.size,
+      }
+    );
 
-    const { error: uploadError } = await supabase.storage
+    const {
+      error: uploadError,
+    } = await supabase.storage
       .from("product-images")
-      .upload(path, file, {
-        cacheControl: "3600",
-        upsert: false,
-        contentType: file.type,
-      });
+      .upload(
+        path,
+        file,
+        {
+          cacheControl: "3600",
+          upsert: false,
+          contentType: file.type,
+        }
+      );
 
     if (uploadError) {
       console.error(
@@ -263,19 +499,19 @@ export default function AdminDashboard() {
       );
     }
 
-    const { data } = supabase.storage
-      .from("product-images")
-      .getPublicUrl(path);
+    const { data } =
+      supabase.storage
+        .from("product-images")
+        .getPublicUrl(path);
 
-    const publicUrl = data?.publicUrl;
+    const publicUrl =
+      data?.publicUrl;
 
     if (!publicUrl) {
       throw new Error(
         "URL gambar gagal dibuat."
       );
     }
-
-    console.log("IMAGE URL:", publicUrl);
 
     return publicUrl;
   }
@@ -288,9 +524,18 @@ export default function AdminDashboard() {
     return name
       .toLowerCase()
       .trim()
-      .replace(/[^a-z0-9\s-]/g, "")
-      .replace(/\s+/g, "-")
-      .replace(/-+/g, "-");
+      .replace(
+        /[^a-z0-9\s-]/g,
+        ""
+      )
+      .replace(
+        /\s+/g,
+        "-"
+      )
+      .replace(
+        /-+/g,
+        "-"
+      );
   }
 
   // =========================================================
@@ -336,75 +581,102 @@ export default function AdminDashboard() {
         );
       }
 
-      // Upload gambar
-      const imageUrl = await uploadImage();
+      if (
+        form.compare_price !== "" &&
+        Number(form.compare_price) <
+          0
+      ) {
+        throw new Error(
+          "Harga coret tidak valid."
+        );
+      }
+
+      const imageUrl =
+        await uploadImage();
 
       const payload = {
-        name: form.name.trim(),
+        name:
+          form.name.trim(),
 
-        category_id: form.category_id,
+        category_id:
+          form.category_id,
 
-        slug: createSlug(form.name),
+        slug:
+          createSlug(
+            form.name
+          ),
 
         description:
-          form.description.trim() || null,
+          form.description.trim() ||
+          null,
 
-        price: Number(form.price),
+        price:
+          Number(form.price),
 
         compare_price:
           form.compare_price === ""
             ? null
-            : Number(form.compare_price),
+            : Number(
+                form.compare_price
+              ),
 
-        stock: Number(form.stock),
+        stock:
+          Number(form.stock),
 
         sku:
-          form.sku.trim() || null,
+          form.sku.trim() ||
+          null,
 
         image_url:
           imageUrl || null,
 
-        is_active: !!form.is_active,
+        is_active:
+          !!form.is_active,
 
-        is_featured: !!form.is_featured,
+        is_featured:
+          !!form.is_featured,
 
-        sizes: form.sizes
-          .split(",")
-          .map((size) => size.trim())
-          .filter(Boolean),
+        sizes:
+          form.sizes
+            .split(",")
+            .map(
+              (size) =>
+                size.trim()
+            )
+            .filter(Boolean),
 
-        colors: form.colors
-          .split(",")
-          .map((color) => color.trim())
-          .filter(Boolean),
+        colors:
+          form.colors
+            .split(",")
+            .map(
+              (color) =>
+                color.trim()
+            )
+            .filter(Boolean),
 
-        updated_at: new Date().toISOString(),
+        updated_at:
+          new Date().toISOString(),
       };
-
-      console.log(
-        "PRODUCT PAYLOAD:",
-        payload
-      );
 
       let result;
 
       if (editing) {
-        result = await supabase
-          .from("products")
-          .update(payload)
-          .eq("id", editing);
+        result =
+          await supabase
+            .from("products")
+            .update(payload)
+            .eq(
+              "id",
+              editing
+            );
       } else {
-        result = await supabase
-          .from("products")
-          .insert(payload);
+        result =
+          await supabase
+            .from("products")
+            .insert(payload);
       }
 
       if (result.error) {
-        console.error(
-          "PRODUCT SAVE ERROR:",
-          result.error
-        );
-
         throw new Error(
           `Gagal menyimpan produk: ${result.error.message}`
         );
@@ -441,7 +713,8 @@ export default function AdminDashboard() {
 
   function handleFileChange(e) {
     const selectedFile =
-      e.target.files?.[0] || null;
+      e.target.files?.[0] ||
+      null;
 
     if (!selectedFile) {
       setFile(null);
@@ -449,9 +722,13 @@ export default function AdminDashboard() {
     }
 
     try {
-      validateImage(selectedFile);
+      validateImage(
+        selectedFile
+      );
 
-      setFile(selectedFile);
+      setFile(
+        selectedFile
+      );
 
       setMessage(
         `Gambar dipilih: ${selectedFile.name}`
@@ -461,7 +738,9 @@ export default function AdminDashboard() {
 
       e.target.value = "";
 
-      setMessage(error.message);
+      setMessage(
+        error.message
+      );
     }
   }
 
@@ -469,17 +748,24 @@ export default function AdminDashboard() {
   // DELETE PRODUCT
   // =========================================================
 
-  async function deleteProduct(id) {
-    if (!confirm("Hapus produk ini?")) {
+  async function deleteProduct(
+    id
+  ) {
+    if (
+      !confirm(
+        "Hapus produk ini?"
+      )
+    ) {
       return;
     }
 
     setMessage("");
 
-    const { error } = await supabase
-      .from("products")
-      .delete()
-      .eq("id", id);
+    const { error } =
+      await supabase
+        .from("products")
+        .delete()
+        .eq("id", id);
 
     if (error) {
       console.error(
@@ -509,10 +795,16 @@ export default function AdminDashboard() {
     id,
     status
   ) {
-    const { error } = await supabase
-      .from("orders")
-      .update({ status })
-      .eq("id", id);
+    const { error } =
+      await supabase
+        .from("orders")
+        .update({
+          status,
+        })
+        .eq(
+          "id",
+          id
+        );
 
     if (error) {
       console.error(
@@ -535,13 +827,383 @@ export default function AdminDashboard() {
   }
 
   // =========================================================
+  // EXPORT ORDER PDF
+  // =========================================================
+
+  async function exportOrdersPDF() {
+    if (
+      filteredOrders.length === 0
+    ) {
+      alert(
+        "Tidak ada pesanan pada periode yang dipilih."
+      );
+
+      return;
+    }
+
+    try {
+      setExportingPDF(true);
+
+      const doc =
+        new jsPDF(
+          "landscape"
+        );
+
+      const periodLabels = {
+        weekly:
+          "Mingguan",
+
+        monthly:
+          "Bulanan",
+
+        yearly:
+          "Tahunan",
+      };
+
+      const periodLabel =
+        periodLabels[
+          orderPeriod
+        ];
+
+      // =====================================================
+      // HEADER
+      // =====================================================
+
+      doc.setFont(
+        "helvetica",
+        "bold"
+      );
+
+      doc.setFontSize(22);
+
+      doc.text(
+        "WS FASHION",
+        14,
+        18
+      );
+
+      doc.setFont(
+        "helvetica",
+        "normal"
+      );
+
+      doc.setFontSize(11);
+
+      doc.text(
+        "Laporan Pesanan Admin",
+        14,
+        26
+      );
+
+      doc.setFontSize(9);
+
+      doc.text(
+        `Periode: ${periodLabel}`,
+        14,
+        34
+      );
+
+      doc.text(
+        `Dicetak: ${new Date().toLocaleString(
+          "id-ID"
+        )}`,
+        14,
+        40
+      );
+
+      // =====================================================
+      // SUMMARY
+      // =====================================================
+
+      doc.setFont(
+        "helvetica",
+        "bold"
+      );
+
+      doc.setFontSize(10);
+
+      doc.text(
+        `Jumlah Pesanan: ${filteredOrders.length}`,
+        14,
+        50
+      );
+
+      doc.text(
+        `Selesai: ${completedOrders}`,
+        85,
+        50
+      );
+
+      doc.text(
+        `Pending: ${pendingOrders}`,
+        140,
+        50
+      );
+
+      doc.text(
+        `Dibatalkan: ${cancelledOrders}`,
+        195,
+        50
+      );
+
+      doc.text(
+        `Omzet: ${formatRupiah(
+          filteredRevenue
+        )}`,
+        14,
+        58
+      );
+
+      // =====================================================
+      // STATUS LABEL
+      // =====================================================
+
+      const statusLabels = {
+        pending:
+          "Pending",
+
+        confirmed:
+          "Dikonfirmasi",
+
+        processing:
+          "Diproses",
+
+        shipped:
+          "Dikirim",
+
+        completed:
+          "Selesai",
+
+        cancelled:
+          "Dibatalkan",
+      };
+
+      const paymentLabels = {
+        unpaid:
+          "Belum Dibayar",
+
+        paid:
+          "Sudah Dibayar",
+
+        failed:
+          "Gagal",
+
+        refunded:
+          "Refund",
+      };
+
+      // =====================================================
+      // TABLE
+      // =====================================================
+
+      const tableData =
+        filteredOrders.map(
+          (
+            order,
+            index
+          ) => [
+            index + 1,
+
+            order.order_number ||
+              "-",
+
+            order.customer_name ||
+              "-",
+
+            order.customer_phone ||
+              order.phone ||
+              "-",
+
+            formatDate(
+              order.created_at
+            ),
+
+            statusLabels[
+              order.status
+            ] ||
+              order.status ||
+              "-",
+
+            paymentLabels[
+              order.payment_status
+            ] ||
+              order.payment_status ||
+              "-",
+
+            formatRupiah(
+              order.total
+            ),
+          ]
+        );
+
+      autoTable(doc, {
+        startY: 66,
+
+        head: [
+          [
+            "No",
+            "No. Pesanan",
+            "Customer",
+            "Telepon",
+            "Tanggal",
+            "Status",
+            "Pembayaran",
+            "Total",
+          ],
+        ],
+
+        body:
+          tableData,
+
+        theme:
+          "grid",
+
+        styles: {
+          fontSize: 8,
+          cellPadding: 3,
+        },
+
+        headStyles: {
+          fontStyle:
+            "bold",
+        },
+
+        columnStyles: {
+          0: {
+            cellWidth: 10,
+            halign:
+              "center",
+          },
+
+          1: {
+            cellWidth: 32,
+          },
+
+          2: {
+            cellWidth: 42,
+          },
+
+          3: {
+            cellWidth: 30,
+          },
+
+          4: {
+            cellWidth: 32,
+          },
+
+          5: {
+            cellWidth: 30,
+          },
+
+          6: {
+            cellWidth: 30,
+          },
+
+          7: {
+            cellWidth: 35,
+            halign:
+              "right",
+          },
+        },
+      });
+
+      // =====================================================
+      // FOOTER
+      // =====================================================
+
+      const finalY =
+        doc.lastAutoTable
+          .finalY + 12;
+
+      doc.setFont(
+        "helvetica",
+        "bold"
+      );
+
+      doc.setFontSize(10);
+
+      doc.text(
+        `TOTAL OMZET: ${formatRupiah(
+          filteredRevenue
+        )}`,
+        14,
+        finalY
+      );
+
+      doc.setFont(
+        "helvetica",
+        "normal"
+      );
+
+      doc.setFontSize(8);
+
+      doc.text(
+        "Laporan ini dibuat secara otomatis oleh sistem WS Fashion.",
+        14,
+        finalY + 8
+      );
+
+      // =====================================================
+      // SAVE PDF
+      // =====================================================
+
+      const date =
+        new Date()
+          .toISOString()
+          .slice(
+            0,
+            10
+          );
+
+      doc.save(
+        `WS-Fashion-Laporan-${orderPeriod}-${date}.pdf`
+      );
+    } catch (error) {
+      console.error(
+        "EXPORT PDF ERROR:",
+        error
+      );
+
+      alert(
+        "Gagal membuat laporan PDF."
+      );
+    } finally {
+      setExportingPDF(
+        false
+      );
+    }
+  }
+
+  // =========================================================
+  // LOGOUT
+  // =========================================================
+
+  async function handleLogout() {
+    try {
+      await logout();
+    } catch (error) {
+      console.error(
+        "LOGOUT ERROR:",
+        error
+      );
+
+      setMessage(
+        "Logout gagal. Silakan coba lagi."
+      );
+    }
+  }
+
+  // =========================================================
   // UI
   // =========================================================
 
   return (
     <main className="admin-page">
 
-      {/* SIDEBAR */}
+      {/* =====================================================
+          SIDEBAR
+      ====================================================== */}
+
       <aside className="admin-sidebar">
 
         <div className="brand admin-brand">
@@ -550,8 +1212,11 @@ export default function AdminDashboard() {
 
         <p className="admin-welcome">
           Halo,{" "}
-          {profile?.full_name || "Admin"}
+          {profile?.full_name ||
+            "Admin"}
         </p>
+
+        {/* PRODUCTS */}
 
         <button
           className={
@@ -562,10 +1227,13 @@ export default function AdminDashboard() {
           onClick={() =>
             setTab("products")
           }
+          type="button"
         >
           <Package size={18} />
           Products
         </button>
+
+        {/* ORDERS */}
 
         <button
           className={
@@ -576,14 +1244,20 @@ export default function AdminDashboard() {
           onClick={() =>
             setTab("orders")
           }
+          type="button"
         >
-          <ShoppingBag size={18} />
+          <ShoppingBag
+            size={18}
+          />
           Orders
         </button>
 
+        {/* LOGOUT */}
+
         <button
           className="admin-nav logout"
-          onClick={signOut}
+          onClick={handleLogout}
+          type="button"
         >
           <LogOut size={18} />
           Logout
@@ -591,10 +1265,14 @@ export default function AdminDashboard() {
 
       </aside>
 
-      {/* CONTENT */}
+      {/* =====================================================
+          CONTENT
+      ====================================================== */}
+
       <section className="admin-content">
 
         {/* TOP */}
+
         <div className="admin-top">
 
           <div>
@@ -613,35 +1291,49 @@ export default function AdminDashboard() {
 
         </div>
 
-        {/* STATS */}
+        {/* =================================================
+            GLOBAL STATS
+        ================================================== */}
+
         <div className="stats-grid">
 
           <div className="stat-card">
-            <span>Products</span>
+            <span>
+              Products
+            </span>
+
             <strong>
               {products.length}
             </strong>
           </div>
 
           <div className="stat-card">
-            <span>Orders</span>
+            <span>
+              Orders
+            </span>
+
             <strong>
               {orders.length}
             </strong>
           </div>
 
           <div className="stat-card">
-            <span>Revenue</span>
+            <span>
+              Revenue
+            </span>
+
             <strong>
-              {formatRupiah(revenue)}
+              {formatRupiah(
+                revenue
+              )}
             </strong>
           </div>
 
         </div>
 
-        {/* ================================================= */}
-        {/* PRODUCTS */}
-        {/* ================================================= */}
+        {/* =================================================
+            PRODUCTS
+        ================================================== */}
 
         {tab === "products" && (
           <>
@@ -658,7 +1350,9 @@ export default function AdminDashboard() {
                 <button
                   type="button"
                   className="icon-button"
-                  onClick={resetForm}
+                  onClick={
+                    resetForm
+                  }
                 >
                   <X />
                 </button>
@@ -666,19 +1360,23 @@ export default function AdminDashboard() {
 
             </div>
 
-            {/* FORM */}
+            {/* PRODUCT FORM */}
+
             <form
               className="admin-form"
-              onSubmit={saveProduct}
+              onSubmit={
+                saveProduct
+              }
             >
 
-              {/* NAME */}
               <label>
                 Nama Produk
 
                 <input
                   type="text"
-                  value={form.name}
+                  value={
+                    form.name
+                  }
                   onChange={(e) =>
                     updateForm(
                       "name",
@@ -690,12 +1388,13 @@ export default function AdminDashboard() {
                 />
               </label>
 
-              {/* CATEGORY */}
               <label>
                 Kategori
 
                 <select
-                  value={form.category_id}
+                  value={
+                    form.category_id
+                  }
                   onChange={(e) =>
                     updateForm(
                       "category_id",
@@ -704,7 +1403,6 @@ export default function AdminDashboard() {
                   }
                   required
                 >
-
                   <option value="">
                     Pilih kategori
                   </option>
@@ -712,25 +1410,31 @@ export default function AdminDashboard() {
                   {categories.map(
                     (category) => (
                       <option
-                        key={category.id}
-                        value={category.id}
+                        key={
+                          category.id
+                        }
+                        value={
+                          category.id
+                        }
                       >
-                        {category.name}
+                        {
+                          category.name
+                        }
                       </option>
                     )
                   )}
-
                 </select>
               </label>
 
-              {/* PRICE */}
               <label>
                 Harga
 
                 <input
                   type="number"
                   min="0"
-                  value={form.price}
+                  value={
+                    form.price
+                  }
                   onChange={(e) =>
                     updateForm(
                       "price",
@@ -742,9 +1446,8 @@ export default function AdminDashboard() {
                 />
               </label>
 
-              {/* COMPARE PRICE */}
               <label>
-                Harga Coret
+                Harga Coret{" "}
                 <small>
                   (opsional)
                 </small>
@@ -765,14 +1468,15 @@ export default function AdminDashboard() {
                 />
               </label>
 
-              {/* STOCK */}
               <label>
                 Stok
 
                 <input
                   type="number"
                   min="0"
-                  value={form.stock}
+                  value={
+                    form.stock
+                  }
                   onChange={(e) =>
                     updateForm(
                       "stock",
@@ -783,16 +1487,17 @@ export default function AdminDashboard() {
                 />
               </label>
 
-              {/* SKU */}
               <label>
-                SKU
+                SKU{" "}
                 <small>
                   (opsional)
                 </small>
 
                 <input
                   type="text"
-                  value={form.sku}
+                  value={
+                    form.sku
+                  }
                   onChange={(e) =>
                     updateForm(
                       "sku",
@@ -803,15 +1508,16 @@ export default function AdminDashboard() {
                 />
               </label>
 
-              {/* SIZES */}
               <label>
-                Ukuran
+                Ukuran{" "}
                 <small>
                   (pisahkan koma)
                 </small>
 
                 <input
-                  value={form.sizes}
+                  value={
+                    form.sizes
+                  }
                   onChange={(e) =>
                     updateForm(
                       "sizes",
@@ -822,15 +1528,16 @@ export default function AdminDashboard() {
                 />
               </label>
 
-              {/* COLORS */}
               <label>
-                Warna
+                Warna{" "}
                 <small>
                   (pisahkan koma)
                 </small>
 
                 <input
-                  value={form.colors}
+                  value={
+                    form.colors
+                  }
                   onChange={(e) =>
                     updateForm(
                       "colors",
@@ -841,13 +1548,14 @@ export default function AdminDashboard() {
                 />
               </label>
 
-              {/* DESCRIPTION */}
               <label className="full">
                 Deskripsi
 
                 <textarea
                   rows="4"
-                  value={form.description}
+                  value={
+                    form.description
+                  }
                   onChange={(e) =>
                     updateForm(
                       "description",
@@ -858,16 +1566,17 @@ export default function AdminDashboard() {
                 />
               </label>
 
-              {/* IMAGE URL */}
               <label className="full">
-                URL gambar
+                URL gambar{" "}
                 <small>
                   (opsional jika upload gambar)
                 </small>
 
                 <input
                   type="url"
-                  value={form.image_url}
+                  value={
+                    form.image_url
+                  }
                   onChange={(e) =>
                     updateForm(
                       "image_url",
@@ -878,10 +1587,11 @@ export default function AdminDashboard() {
                 />
               </label>
 
-              {/* UPLOAD */}
               <label className="file-input full">
 
-                <ImagePlus size={18} />
+                <ImagePlus
+                  size={18}
+                />
 
                 {file
                   ? file.name
@@ -898,11 +1608,11 @@ export default function AdminDashboard() {
               </label>
 
               <small className="full">
-                JPG, PNG, WEBP, atau GIF.
+                JPG, PNG, WEBP,
+                atau GIF.
                 Maksimal 5 MB.
               </small>
 
-              {/* ACTIVE */}
               <label className="check full">
 
                 <input
@@ -922,7 +1632,6 @@ export default function AdminDashboard() {
 
               </label>
 
-              {/* FEATURED */}
               <label className="check full">
 
                 <input
@@ -942,7 +1651,6 @@ export default function AdminDashboard() {
 
               </label>
 
-              {/* MESSAGE */}
               {message && (
                 <div
                   className="message full"
@@ -952,17 +1660,22 @@ export default function AdminDashboard() {
                 </div>
               )}
 
-              {/* SUBMIT */}
               <button
                 className="button dark"
-                disabled={saving}
+                disabled={
+                  saving
+                }
                 type="submit"
               >
 
                 {editing ? (
-                  <Pencil size={17} />
+                  <Pencil
+                    size={17}
+                  />
                 ) : (
-                  <Plus size={17} />
+                  <Plus
+                    size={17}
+                  />
                 )}
 
                 {saving
@@ -976,6 +1689,7 @@ export default function AdminDashboard() {
             </form>
 
             {/* PRODUCT LIST */}
+
             <div className="admin-section-heading">
               <h2>
                 Product List
@@ -988,13 +1702,33 @@ export default function AdminDashboard() {
 
                 <thead>
                   <tr>
-                    <th>Produk</th>
-                    <th>Kategori</th>
-                    <th>Harga</th>
-                    <th>Stok</th>
-                    <th>Status</th>
-                    <th>Featured</th>
-                    <th>Aksi</th>
+                    <th>
+                      Produk
+                    </th>
+
+                    <th>
+                      Kategori
+                    </th>
+
+                    <th>
+                      Harga
+                    </th>
+
+                    <th>
+                      Stok
+                    </th>
+
+                    <th>
+                      Status
+                    </th>
+
+                    <th>
+                      Featured
+                    </th>
+
+                    <th>
+                      Aksi
+                    </th>
                   </tr>
                 </thead>
 
@@ -1003,10 +1737,13 @@ export default function AdminDashboard() {
                   {products.map(
                     (product) => (
                       <tr
-                        key={product.id}
+                        key={
+                          product.id
+                        }
                       >
 
                         <td>
+
                           <div className="table-product">
 
                             {product.image_url ? (
@@ -1031,10 +1768,12 @@ export default function AdminDashboard() {
                             </b>
 
                           </div>
+
                         </td>
 
                         <td>
-                          {product.categories
+                          {product
+                            .categories
                             ?.name ||
                             "—"}
                         </td>
@@ -1046,7 +1785,9 @@ export default function AdminDashboard() {
                         </td>
 
                         <td>
-                          {product.stock}
+                          {
+                            product.stock
+                          }
                         </td>
 
                         <td>
@@ -1114,58 +1855,283 @@ export default function AdminDashboard() {
           </>
         )}
 
-        {/* ================================================= */}
-        {/* ORDERS */}
-        {/* ================================================= */}
+        {/* =================================================
+            ORDERS
+        ================================================== */}
 
         {tab === "orders" && (
           <div className="admin-section">
 
+            {/* ORDER HEADER */}
+
             <div className="admin-section-heading">
-              <h2>
-                Orders
-              </h2>
+
+              <div>
+
+                <h2>
+                  Orders
+                </h2>
+
+                <p className="admin-report-subtitle">
+                  Kelola pesanan dan laporan transaksi.
+                </p>
+
+              </div>
+
+              <button
+                className="button dark"
+                type="button"
+                onClick={
+                  exportOrdersPDF
+                }
+                disabled={
+                  exportingPDF ||
+                  filteredOrders.length ===
+                    0
+                }
+              >
+
+                {exportingPDF ? (
+                  <>
+                    <RefreshCw
+                      size={17}
+                      className="admin-spin"
+                    />
+
+                    Membuat PDF...
+                  </>
+                ) : (
+                  <>
+                    <FileDown
+                      size={17}
+                    />
+
+                    Export PDF
+                  </>
+                )}
+
+              </button>
+
             </div>
+
+            {/* PERIOD FILTER */}
+
+            <div className="order-report-toolbar">
+
+              <div className="order-period">
+
+                <div className="order-period-label">
+
+                  <CalendarDays
+                    size={18}
+                  />
+
+                  <strong>
+                    Periode Laporan
+                  </strong>
+
+                </div>
+
+                <div className="order-period-buttons">
+
+                  <button
+                    type="button"
+                    className={
+                      orderPeriod ===
+                      "weekly"
+                        ? "active"
+                        : ""
+                    }
+                    onClick={() =>
+                      setOrderPeriod(
+                        "weekly"
+                      )
+                    }
+                  >
+                    Mingguan
+                  </button>
+
+                  <button
+                    type="button"
+                    className={
+                      orderPeriod ===
+                      "monthly"
+                        ? "active"
+                        : ""
+                    }
+                    onClick={() =>
+                      setOrderPeriod(
+                        "monthly"
+                      )
+                    }
+                  >
+                    Bulanan
+                  </button>
+
+                  <button
+                    type="button"
+                    className={
+                      orderPeriod ===
+                      "yearly"
+                        ? "active"
+                        : ""
+                    }
+                    onClick={() =>
+                      setOrderPeriod(
+                        "yearly"
+                      )
+                    }
+                  >
+                    Tahunan
+                  </button>
+
+                </div>
+
+              </div>
+
+            </div>
+
+            {/* REPORT STATS */}
+
+            <div className="order-report-stats">
+
+              <div className="order-report-card">
+
+                <span>
+                  Total Pesanan
+                </span>
+
+                <strong>
+                  {
+                    filteredOrders.length
+                  }
+                </strong>
+
+              </div>
+
+              <div className="order-report-card">
+
+                <span>
+                  Pesanan Selesai
+                </span>
+
+                <strong>
+                  {
+                    completedOrders
+                  }
+                </strong>
+
+              </div>
+
+              <div className="order-report-card">
+
+                <span>
+                  Pending
+                </span>
+
+                <strong>
+                  {
+                    pendingOrders
+                  }
+                </strong>
+
+              </div>
+
+              <div className="order-report-card">
+
+                <span>
+                  Omzet
+                </span>
+
+                <strong>
+                  {formatRupiah(
+                    filteredRevenue
+                  )}
+                </strong>
+
+              </div>
+
+            </div>
+
+            {/* ORDER TABLE */}
 
             <div className="admin-table-wrap">
 
               <table className="admin-table">
 
                 <thead>
+
                   <tr>
-                    <th>Customer</th>
-                    <th>Total</th>
-                    <th>Status</th>
-                    <th>Date</th>
+
+                    <th>
+                      Order
+                    </th>
+
+                    <th>
+                      Customer
+                    </th>
+
+                    <th>
+                      Total
+                    </th>
+
+                    <th>
+                      Pembayaran
+                    </th>
+
+                    <th>
+                      Status
+                    </th>
+
+                    <th>
+                      Date
+                    </th>
+
                   </tr>
+
                 </thead>
 
                 <tbody>
 
-                  {orders.map(
+                  {filteredOrders.map(
                     (order) => (
                       <tr
-                        key={order.id}
+                        key={
+                          order.id
+                        }
                       >
 
                         <td>
                           <b>
-                            {
-                              order.customer_name
-                            }
+                            {order.order_number ||
+                              "—"}
+                          </b>
+                        </td>
+
+                        <td>
+
+                          <b>
+                            {order.customer_name ||
+                              "—"}
                           </b>
 
                           <small>
-                            {
-                              order.phone
-                            }
+                            {order.customer_phone ||
+                              order.phone ||
+                              "—"}
                           </small>
+
                         </td>
 
                         <td>
                           {formatRupiah(
                             order.total
                           )}
+                        </td>
+
+                        <td>
+                          {order.payment_status ||
+                            "unpaid"}
                         </td>
 
                         <td>
@@ -1224,9 +2190,9 @@ export default function AdminDashboard() {
 
               </table>
 
-              {!orders.length && (
+              {!filteredOrders.length && (
                 <div className="empty-state">
-                  Belum ada order.
+                  Tidak ada pesanan pada periode ini.
                 </div>
               )}
 
@@ -1236,6 +2202,7 @@ export default function AdminDashboard() {
         )}
 
       </section>
+
     </main>
   );
 }

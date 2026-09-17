@@ -1,31 +1,32 @@
 import React, {
   useEffect,
+  useMemo,
   useState,
 } from "react";
+
+import {
+  ArrowRight,
+  CalendarDays,
+  Loader2,
+  Package,
+  RefreshCw,
+} from "lucide-react";
 
 import {
   Link,
 } from "react-router-dom";
 
-import {
-  Package,
-  ArrowRight,
-  Loader2,
-  ShoppingBag,
-} from "lucide-react";
-
 import { supabase } from "../lib/supabase";
-
 import { useAuth } from "../context/AuthContext";
 
+import "./Orders.css";
 
 export default function Orders() {
-  const {
-    user,
-  } = useAuth();
+  const { user } = useAuth();
 
-  const [orders, setOrders] =
-    useState([]);
+  const [orders, setOrders] = useState([]);
+  const [period, setPeriod] =
+    useState("monthly");
 
   const [loading, setLoading] =
     useState(true);
@@ -33,60 +34,55 @@ export default function Orders() {
   const [error, setError] =
     useState("");
 
+  // =========================================================
+  // LOAD ORDERS USER
+  // =========================================================
 
-  useEffect(() => {
+  const loadOrders = async () => {
     if (!user?.id) {
+      setOrders([]);
       setLoading(false);
       return;
     }
 
-    loadOrders();
-  }, [user?.id]);
-
-
-  const loadOrders = async () => {
     try {
       setLoading(true);
       setError("");
 
       const {
         data,
-        error,
+        error: supabaseError,
       } = await supabase
         .from("orders")
-        .select(`
-          id,
-          order_number,
-          customer_name,
-          subtotal,
-          shipping_cost,
-          total,
-          status,
-          payment_status,
-          payment_method,
-          created_at
-        `)
-        .eq("user_id", user.id)
-        .order("created_at", {
-          ascending: false,
-        });
+        .select("*")
+        .eq(
+          "user_id",
+          user.id
+        )
+        .order(
+          "created_at",
+          {
+            ascending: false,
+          }
+        );
 
-      if (error) {
+      if (supabaseError) {
         console.error(
           "LOAD ORDERS ERROR:",
-          error
+          supabaseError
         );
 
         setError(
-          error.message ||
-            "Gagal mengambil pesanan."
+          supabaseError.message ||
+            "Gagal mengambil data pesanan."
         );
 
         return;
       }
 
-      setOrders(data || []);
-
+      setOrders(
+        data || []
+      );
     } catch (error) {
       console.error(
         "ORDERS ERROR:",
@@ -95,292 +91,602 @@ export default function Orders() {
 
       setError(
         error?.message ||
-          "Terjadi kesalahan saat mengambil pesanan."
+          "Terjadi kesalahan."
       );
-
     } finally {
       setLoading(false);
     }
   };
 
+  // =========================================================
+  // INITIAL LOAD
+  // =========================================================
 
-  const formatPrice = (value) => {
-    return new Intl.NumberFormat(
-      "id-ID",
-      {
-        style: "currency",
-        currency: "IDR",
-        maximumFractionDigits: 0,
-      }
-    ).format(Number(value || 0));
-  };
+  useEffect(() => {
+    loadOrders();
+  }, [user?.id]);
 
+  // =========================================================
+  // REALTIME ORDER
+  // =========================================================
 
-  const formatDate = (value) => {
-    if (!value) return "-";
+  useEffect(() => {
+    if (!user?.id) {
+      return;
+    }
 
-    return new Date(value).toLocaleDateString(
-      "id-ID",
-      {
-        day: "2-digit",
-        month: "long",
-        year: "numeric",
-      }
-    );
-  };
+    const channel =
+      supabase
+        .channel(
+          `user-orders-${user.id}`
+        )
+        .on(
+          "postgres_changes",
+          {
+            event: "*",
+            schema: "public",
+            table: "orders",
+            filter: `user_id=eq.${user.id}`,
+          },
+          () => {
+            loadOrders();
+          }
+        )
+        .subscribe();
 
+    return () => {
+      supabase.removeChannel(
+        channel
+      );
+    };
+  }, [user?.id]);
 
-  const getStatusLabel = (status) => {
-    const labels = {
-      pending: "Menunggu Konfirmasi",
-      confirmed: "Dikonfirmasi",
-      processing: "Diproses",
-      shipped: "Dikirim",
-      completed: "Selesai",
-      cancelled: "Dibatalkan",
+  // =========================================================
+  // FILTER PERIODE
+  // =========================================================
+
+  const filteredOrders =
+    useMemo(() => {
+      const now =
+        new Date();
+
+      return orders.filter(
+        (order) => {
+          const orderDate =
+            new Date(
+              order.created_at
+            );
+
+          if (
+            Number.isNaN(
+              orderDate.getTime()
+            )
+          ) {
+            return false;
+          }
+
+          // 7 HARI TERAKHIR
+          if (
+            period ===
+            "weekly"
+          ) {
+            const start =
+              new Date(
+                now
+              );
+
+            start.setDate(
+              now.getDate() -
+                6
+            );
+
+            start.setHours(
+              0,
+              0,
+              0,
+              0
+            );
+
+            return (
+              orderDate >=
+              start
+            );
+          }
+
+          // BULAN BERJALAN
+          if (
+            period ===
+            "monthly"
+          ) {
+            return (
+              orderDate.getMonth() ===
+                now.getMonth() &&
+              orderDate.getFullYear() ===
+                now.getFullYear()
+            );
+          }
+
+          // TAHUN BERJALAN
+          if (
+            period ===
+            "yearly"
+          ) {
+            return (
+              orderDate.getFullYear() ===
+              now.getFullYear()
+            );
+          }
+
+          return true;
+        }
+      );
+    }, [
+      orders,
+      period,
+    ]);
+
+  // =========================================================
+  // TOTAL
+  // =========================================================
+
+  const totalAmount =
+    useMemo(() => {
+      return filteredOrders.reduce(
+        (
+          total,
+          order
+        ) =>
+          total +
+          Number(
+            order.total || 0
+          ),
+        0
+      );
+    }, [
+      filteredOrders,
+    ]);
+
+  // =========================================================
+  // FORMAT PRICE
+  // =========================================================
+
+  const formatPrice =
+    (value) => {
+      return new Intl.NumberFormat(
+        "id-ID",
+        {
+          style:
+            "currency",
+          currency:
+            "IDR",
+          maximumFractionDigits: 0,
+        }
+      ).format(
+        Number(
+          value || 0
+        )
+      );
     };
 
-    return (
-      labels[status] ||
-      status ||
-      "Menunggu"
-    );
+  // =========================================================
+  // FORMAT DATE
+  // =========================================================
+
+  const formatDate =
+    (value) => {
+      if (!value) {
+        return "-";
+      }
+
+      return new Date(
+        value
+      ).toLocaleDateString(
+        "id-ID",
+        {
+          day: "2-digit",
+          month: "long",
+          year: "numeric",
+        }
+      );
+    };
+
+  // =========================================================
+  // STATUS
+  // =========================================================
+
+  const statusLabel = {
+    pending:
+      "Menunggu Konfirmasi",
+
+    confirmed:
+      "Dikonfirmasi",
+
+    processing:
+      "Diproses",
+
+    shipped:
+      "Dikirim",
+
+    completed:
+      "Selesai",
+
+    cancelled:
+      "Dibatalkan",
   };
 
+  // =========================================================
+  // PAYMENT
+  // =========================================================
+
+  const paymentLabel = {
+    unpaid:
+      "Belum Dibayar",
+
+    paid:
+      "Sudah Dibayar",
+
+    failed:
+      "Gagal",
+
+    refunded:
+      "Refund",
+  };
+
+  // =========================================================
+  // PERIOD
+  // =========================================================
+
+  const periodLabel = {
+    weekly:
+      "Mingguan",
+
+    monthly:
+      "Bulanan",
+
+    yearly:
+      "Tahunan",
+  };
+
+  // =========================================================
+  // LOADING
+  // =========================================================
 
   if (loading) {
     return (
-      <main className="page-section">
-        <div className="container">
-          <div
-            style={{
-              minHeight: "400px",
-              display: "grid",
-              placeItems: "center",
-            }}
-          >
-            <Loader2
-              size={32}
-              className="spin"
-            />
-          </div>
+      <main className="orders-page">
+
+        <div className="orders-loading">
+
+          <Loader2
+            size={32}
+            className="orders-spin"
+          />
+
+          <p>
+            Memuat pesanan...
+          </p>
+
         </div>
+
       </main>
     );
   }
 
+  // =========================================================
+  // VIEW
+  // =========================================================
 
   return (
-    <main className="page-section">
+    <main className="orders-page">
 
-      <div className="container">
-
+      <div className="orders-container">
 
         {/* HEADER */}
 
-        <div
-          style={{
-            marginBottom: "32px",
-          }}
-        >
-          <p className="eyebrow">
-            WS FASHION
-          </p>
+        <div className="orders-header">
 
-          <h1>
-            Pesanan Saya
-          </h1>
+          <div>
 
-          <p>
-            Lihat riwayat dan status
-            pesanan kamu.
-          </p>
+            <p className="orders-eyebrow">
+              WS FASHION
+            </p>
+
+            <h1>
+              Pesanan Saya
+            </h1>
+
+            <p>
+              Lihat riwayat dan status
+              pesanan Anda.
+            </p>
+
+          </div>
+
+          <button
+            className="orders-refresh"
+            onClick={
+              loadOrders
+            }
+            title="Refresh"
+            type="button"
+          >
+            <RefreshCw
+              size={18}
+            />
+          </button>
+
         </div>
-
 
         {/* ERROR */}
 
         {error && (
-          <div className="auth-message auth-error">
+          <div className="orders-error">
             {error}
           </div>
         )}
 
+        {/* FILTER */}
+
+        <section className="orders-toolbar">
+
+          <div className="period-filter">
+
+            <div className="period-title">
+
+              <CalendarDays
+                size={18}
+              />
+
+              <span>
+                Periode
+              </span>
+
+            </div>
+
+            <div className="period-buttons">
+
+              <button
+                type="button"
+                className={
+                  period ===
+                  "weekly"
+                    ? "active"
+                    : ""
+                }
+                onClick={() =>
+                  setPeriod(
+                    "weekly"
+                  )
+                }
+              >
+                Mingguan
+              </button>
+
+              <button
+                type="button"
+                className={
+                  period ===
+                  "monthly"
+                    ? "active"
+                    : ""
+                }
+                onClick={() =>
+                  setPeriod(
+                    "monthly"
+                  )
+                }
+              >
+                Bulanan
+              </button>
+
+              <button
+                type="button"
+                className={
+                  period ===
+                  "yearly"
+                    ? "active"
+                    : ""
+                }
+                onClick={() =>
+                  setPeriod(
+                    "yearly"
+                  )
+                }
+              >
+                Tahunan
+              </button>
+
+            </div>
+
+          </div>
+
+        </section>
+
+        {/* SUMMARY */}
+
+        <section className="orders-summary">
+
+          <div>
+
+            <span>
+              Periode
+            </span>
+
+            <strong>
+              {
+                periodLabel[
+                  period
+                ]
+              }
+            </strong>
+
+          </div>
+
+          <div>
+
+            <span>
+              Jumlah Pesanan
+            </span>
+
+            <strong>
+              {
+                filteredOrders.length
+              }
+            </strong>
+
+          </div>
+
+          <div>
+
+            <span>
+              Total Transaksi
+            </span>
+
+            <strong>
+              {formatPrice(
+                totalAmount
+              )}
+            </strong>
+
+          </div>
+
+        </section>
 
         {/* EMPTY */}
 
-        {!error &&
-          orders.length === 0 && (
-            <div
-              style={{
-                minHeight: "350px",
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                justifyContent: "center",
-                textAlign: "center",
-                gap: "16px",
-              }}
+        {filteredOrders.length ===
+        0 ? (
+          <div className="orders-empty">
+
+            <Package
+              size={50}
+            />
+
+            <h2>
+              Belum ada pesanan
+            </h2>
+
+            <p>
+              Tidak ada pesanan
+              pada periode{" "}
+              {
+                periodLabel[
+                  period
+                ]
+              }. 
+            </p>
+
+            <Link
+              to="/products"
+              className="orders-shop-button"
             >
-              <ShoppingBag size={48} />
+              Belanja Sekarang
 
-              <h2>
-                Belum ada pesanan
-              </h2>
+              <ArrowRight
+                size={17}
+              />
+            </Link>
 
-              <p>
-                Kamu belum melakukan
-                pembelian.
-              </p>
+          </div>
+        ) : (
+          <div className="orders-list">
 
-              <Link
-                to="/products"
-                className="auth-submit"
-                style={{
-                  textDecoration: "none",
-                  display: "inline-flex",
-                  width: "auto",
-                }}
-              >
-                Mulai Belanja
-              </Link>
-            </div>
-          )}
-
-
-        {/* ORDERS */}
-
-        {orders.length > 0 && (
-          <div
-            style={{
-              display: "grid",
-              gap: "16px",
-            }}
-          >
-
-            {orders.map((order) => (
-
-              <div
-                key={order.id}
-                style={{
-                  border: "1px solid #e5e5e5",
-                  borderRadius: "18px",
-                  padding: "20px",
-                  background: "#fff",
-                }}
-              >
-
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    gap: "16px",
-                    flexWrap: "wrap",
-                    marginBottom: "16px",
-                  }}
+            {filteredOrders.map(
+              (order) => (
+                <article
+                  className="order-card"
+                  key={
+                    order.id
+                  }
                 >
 
-                  <div>
+                  {/* TOP */}
 
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "10px",
-                        marginBottom: "6px",
-                      }}
+                  <div className="order-card-top">
+
+                    <div>
+
+                      <span className="order-number">
+                        {
+                          order.order_number ||
+                          "Pesanan"
+                        }
+                      </span>
+
+                      <small>
+                        {formatDate(
+                          order.created_at
+                        )}
+                      </small>
+
+                    </div>
+
+                    <span
+                      className={`order-status status-${order.status}`}
                     >
-                      <Package size={20} />
+                      {
+                        statusLabel[
+                          order.status
+                        ] ||
+                        order.status ||
+                        "-"
+                      }
+                    </span>
+
+                  </div>
+
+                  {/* BOTTOM */}
+
+                  <div className="order-card-bottom">
+
+                    <div>
+
+                      <span>
+                        Pembayaran
+                      </span>
 
                       <strong>
-                        {order.order_number}
+                        {
+                          paymentLabel[
+                            order.payment_status
+                          ] ||
+                          order.payment_status ||
+                          "-"
+                        }
                       </strong>
+
                     </div>
 
-                    <small>
-                      {formatDate(
-                        order.created_at
-                      )}
-                    </small>
+                    <div>
 
-                  </div>
+                      <span>
+                        Total
+                      </span>
 
+                      <strong>
+                        {formatPrice(
+                          order.total
+                        )}
+                      </strong>
 
-                  <span
-                    style={{
-                      padding: "7px 12px",
-                      borderRadius: "999px",
-                      background: "#f3f3f3",
-                      fontSize: "13px",
-                      fontWeight: "600",
-                    }}
-                  >
-                    {getStatusLabel(
-                      order.status
-                    )}
-                  </span>
+                    </div>
 
-                </div>
-
-
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    gap: "16px",
-                    flexWrap: "wrap",
-                  }}
-                >
-
-                  <div>
-
-                    <small>
-                      Total Pesanan
-                    </small>
-
-                    <div
-                      style={{
-                        fontSize: "18px",
-                        fontWeight: "700",
-                        marginTop: "4px",
-                      }}
+                    <Link
+                      to={`/orders/${order.id}`}
+                      className="order-detail-button"
                     >
-                      {formatPrice(
-                        order.total
-                      )}
-                    </div>
+                      Detail
+
+                      <ArrowRight
+                        size={16}
+                      />
+                    </Link>
 
                   </div>
 
-
-                  <Link
-                    to={`/orders/${order.id}`}
-                    style={{
-                      display: "inline-flex",
-                      alignItems: "center",
-                      gap: "8px",
-                      padding: "10px 16px",
-                      borderRadius: "999px",
-                      background: "#111",
-                      color: "#fff",
-                      textDecoration: "none",
-                      fontSize: "14px",
-                      fontWeight: "600",
-                    }}
-                  >
-                    Detail Pesanan
-
-                    <ArrowRight
-                      size={16}
-                    />
-                  </Link>
-
-                </div>
-
-              </div>
-
-            ))}
+                </article>
+              )
+            )}
 
           </div>
         )}

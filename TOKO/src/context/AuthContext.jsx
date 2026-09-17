@@ -25,10 +25,7 @@ export function AuthProvider({ children }) {
     }
 
     try {
-      const {
-        data,
-        error,
-      } = await supabase
+      const { data, error } = await supabase
         .from("profiles")
         .select("*")
         .eq("id", userId)
@@ -48,7 +45,6 @@ export function AuthProvider({ children }) {
     }
   };
 
-
   // =========================================================
   // AUTH INITIALIZATION
   // =========================================================
@@ -66,21 +62,14 @@ export function AuthProvider({ children }) {
         } = await supabase.auth.getSession();
 
         if (error) {
-          console.error(
-            "GET SESSION ERROR:",
-            error
-          );
+          console.error("GET SESSION ERROR:", error);
         }
 
         if (!mounted) return;
 
-        const currentUser =
-          session?.user || null;
+        const currentUser = session?.user || null;
 
-        console.log(
-          "CURRENT USER:",
-          currentUser
-        );
+        console.log("CURRENT USER:", currentUser);
 
         setUser(currentUser);
 
@@ -90,10 +79,7 @@ export function AuthProvider({ children }) {
           setProfile(null);
         }
       } catch (error) {
-        console.error(
-          "AUTH INITIALIZATION ERROR:",
-          error
-        );
+        console.error("AUTH INITIALIZATION ERROR:", error);
       } finally {
         if (mounted) {
           setLoading(false);
@@ -102,7 +88,6 @@ export function AuthProvider({ children }) {
     };
 
     initializeAuth();
-
 
     // =======================================================
     // AUTH STATE LISTENER
@@ -114,15 +99,15 @@ export function AuthProvider({ children }) {
       (event, session) => {
         if (!mounted) return;
 
-        console.log(
-          "AUTH EVENT:",
-          event
-        );
+        console.log("AUTH EVENT:", event);
 
-        const currentUser =
-          session?.user || null;
+        const currentUser = session?.user || null;
 
         setUser(currentUser);
+
+        // =====================================================
+        // USER LOGGED OUT
+        // =====================================================
 
         if (!currentUser) {
           setProfile(null);
@@ -130,13 +115,18 @@ export function AuthProvider({ children }) {
           return;
         }
 
+        // =====================================================
+        // USER LOGGED IN
+        // =====================================================
+
         /*
-         * Jangan langsung melakukan query Supabase
-         * di dalam callback auth state.
+         * Jangan melakukan query Supabase langsung
+         * di dalam callback onAuthStateChange.
          *
-         * Gunakan setTimeout agar tidak terjadi
-         * masalah auth lock / deadlock.
+         * Gunakan setTimeout untuk menghindari
+         * auth lock / deadlock.
          */
+
         setTimeout(() => {
           if (!mounted) return;
 
@@ -147,7 +137,6 @@ export function AuthProvider({ children }) {
       }
     );
 
-
     // =======================================================
     // CLEANUP
     // =======================================================
@@ -157,7 +146,6 @@ export function AuthProvider({ children }) {
       subscription.unsubscribe();
     };
   }, []);
-
 
   // =========================================================
   // REGISTER
@@ -200,11 +188,11 @@ export function AuthProvider({ children }) {
     }
 
     try {
-      const cleanEmail =
-        email.trim().toLowerCase();
+      const cleanEmail = email
+        .trim()
+        .toLowerCase();
 
-      const cleanName =
-        fullName.trim();
+      const cleanName = fullName.trim();
 
       const cleanPhone =
         phone?.trim() || null;
@@ -236,9 +224,7 @@ export function AuthProvider({ children }) {
 
         return {
           success: false,
-          error: translateAuthError(
-            error
-          ),
+          error: translateAuthError(error),
         };
       }
 
@@ -255,23 +241,15 @@ export function AuthProvider({ children }) {
         data.user
       );
 
-      /*
-       * Jika Supabase tidak membutuhkan email confirmation,
-       * session akan langsung tersedia.
-       *
-       * Jika email confirmation aktif, session bisa null.
-       */
+      // =====================================================
+      // CREATE PROFILE
+      // =====================================================
+
       if (data.session) {
         console.log(
           "REGISTER SESSION AVAILABLE"
         );
 
-        /*
-         * Coba membuat profile.
-         *
-         * Jika gagal karena RLS, jangan menganggap
-         * registrasi user gagal.
-         */
         const {
           error: profileError,
         } = await supabase
@@ -298,9 +276,7 @@ export function AuthProvider({ children }) {
           );
         }
 
-        await loadProfile(
-          data.user.id
-        );
+        await loadProfile(data.user.id);
       }
 
       console.log(
@@ -329,7 +305,6 @@ export function AuthProvider({ children }) {
     }
   };
 
-
   // =========================================================
   // LOGIN
   // =========================================================
@@ -355,8 +330,9 @@ export function AuthProvider({ children }) {
     }
 
     try {
-      const cleanEmail =
-        email.trim().toLowerCase();
+      const cleanEmail = email
+        .trim()
+        .toLowerCase();
 
       const {
         data,
@@ -374,9 +350,7 @@ export function AuthProvider({ children }) {
 
         return {
           success: false,
-          error: translateAuthError(
-            error
-          ),
+          error: translateAuthError(error),
         };
       }
 
@@ -388,9 +362,7 @@ export function AuthProvider({ children }) {
       setUser(data.user);
 
       if (data.user) {
-        await loadProfile(
-          data.user.id
-        );
+        await loadProfile(data.user.id);
       }
 
       console.log(
@@ -417,7 +389,6 @@ export function AuthProvider({ children }) {
     }
   };
 
-
   // =========================================================
   // LOGOUT
   // =========================================================
@@ -426,9 +397,16 @@ export function AuthProvider({ children }) {
     console.log("=== LOGOUT START ===");
 
     try {
+      /*
+       * PENTING:
+       * Supabase menggunakan signOut(), bukan logout().
+       */
+
       const {
         error,
-      } = await supabase.auth.signOut();
+      } = await supabase.auth.signOut({
+        scope: "local",
+      });
 
       if (error) {
         console.error(
@@ -438,10 +416,13 @@ export function AuthProvider({ children }) {
 
         return {
           success: false,
-          error: error.message,
+          error:
+            error.message ||
+            "Gagal logout.",
         };
       }
 
+      // Bersihkan state React
       setUser(null);
       setProfile(null);
 
@@ -467,7 +448,6 @@ export function AuthProvider({ children }) {
     }
   };
 
-
   // =========================================================
   // REFRESH PROFILE
   // =========================================================
@@ -477,11 +457,8 @@ export function AuthProvider({ children }) {
       return null;
     }
 
-    return await loadProfile(
-      user.id
-    );
+    return await loadProfile(user.id);
   };
-
 
   // =========================================================
   // CONTEXT VALUE
@@ -498,23 +475,18 @@ export function AuthProvider({ children }) {
 
     refreshProfile,
 
-    isAuthenticated:
-      !!user,
+    isAuthenticated: !!user,
 
     isAdmin:
       profile?.role === "admin",
   };
 
-
   return (
-    <AuthContext.Provider
-      value={value}
-    >
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );
 }
-
 
 // =============================================================
 // AUTH ERROR TRANSLATOR
@@ -567,10 +539,11 @@ function translateAuthError(error) {
     return "Terlalu banyak percobaan. Silakan coba beberapa saat lagi.";
   }
 
-  return message ||
-    "Terjadi kesalahan autentikasi.";
+  return (
+    message ||
+    "Terjadi kesalahan autentikasi."
+  );
 }
-
 
 // =============================================================
 // HOOK
