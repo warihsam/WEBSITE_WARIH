@@ -67,15 +67,15 @@ const ALLOWED_IMAGE_TYPES = [
 ];
 
 export default function AdminDashboard() {
-  // =========================================================
+  // =======================================================
   // AUTH
-  // =========================================================
+  // =======================================================
 
   const { profile, logout } = useAuth();
 
-  // =========================================================
+  // =======================================================
   // MAIN STATE
-  // =========================================================
+  // =======================================================
 
   const [tab, setTab] = useState("products");
 
@@ -97,9 +97,9 @@ export default function AdminDashboard() {
   const [message, setMessage] =
     useState("");
 
-  // =========================================================
+  // =======================================================
   // PRODUCT STATE
-  // =========================================================
+  // =======================================================
 
   const [form, setForm] =
     useState({
@@ -115,9 +115,9 @@ export default function AdminDashboard() {
   const [saving, setSaving] =
     useState(false);
 
-  // =========================================================
+  // =======================================================
   // CATEGORY STATE
-  // =========================================================
+  // =======================================================
 
   const [categoryForm, setCategoryForm] =
     useState({
@@ -130,9 +130,9 @@ export default function AdminDashboard() {
   const [savingCategory, setSavingCategory] =
     useState(false);
 
-  // =========================================================
+  // =======================================================
   // ORDER REPORT
-  // =========================================================
+  // =======================================================
 
   const [orderPeriod, setOrderPeriod] =
     useState("monthly");
@@ -140,9 +140,9 @@ export default function AdminDashboard() {
   const [exportingPDF, setExportingPDF] =
     useState(false);
 
-  // =========================================================
-  // LOAD ALL DATA
-  // =========================================================
+  // =======================================================
+  // LOAD DATA
+  // =======================================================
 
   async function load() {
     setLoading(true);
@@ -196,10 +196,6 @@ export default function AdminDashboard() {
           }),
       ]);
 
-      // =======================================================
-      // PRODUCT ERROR
-      // =======================================================
-
       if (productsError) {
         console.error(
           "LOAD PRODUCTS ERROR:",
@@ -211,10 +207,6 @@ export default function AdminDashboard() {
         );
       }
 
-      // =======================================================
-      // ORDER ERROR
-      // =======================================================
-
       if (ordersError) {
         console.error(
           "LOAD ORDERS ERROR:",
@@ -225,10 +217,6 @@ export default function AdminDashboard() {
           `Gagal memuat order: ${ordersError.message}`
         );
       }
-
-      // =======================================================
-      // CATEGORY ERROR
-      // =======================================================
 
       if (categoriesError) {
         console.error(
@@ -266,13 +254,17 @@ export default function AdminDashboard() {
     }
   }
 
+  // =======================================================
+  // INITIAL LOAD
+  // =======================================================
+
   useEffect(() => {
     load();
   }, []);
 
-  // =========================================================
-  // ESCAPE SIDEBAR
-  // =========================================================
+  // =======================================================
+  // ESCAPE
+  // =======================================================
 
   useEffect(() => {
     function handleEscape(event) {
@@ -294,18 +286,19 @@ export default function AdminDashboard() {
     };
   }, []);
 
-  // =========================================================
-  // SIDEBAR
-  // =========================================================
+  // =======================================================
+  // TAB
+  // =======================================================
 
   function handleTabChange(nextTab) {
     setTab(nextTab);
     setSidebarOpen(false);
+    setMessage("");
   }
 
-  // =========================================================
+  // =======================================================
   // PRODUCT FORM
-  // =========================================================
+  // =======================================================
 
   function updateForm(field, value) {
     setForm((current) => ({
@@ -314,9 +307,9 @@ export default function AdminDashboard() {
     }));
   }
 
-  // =========================================================
+  // =======================================================
   // CATEGORY FORM
-  // =========================================================
+  // =======================================================
 
   function updateCategoryForm(
     field,
@@ -328,9 +321,9 @@ export default function AdminDashboard() {
     }));
   }
 
-  // =========================================================
-  // SLUG
-  // =========================================================
+  // =======================================================
+  // CREATE SLUG
+  // =======================================================
 
   function createSlug(name) {
     return name
@@ -350,9 +343,9 @@ export default function AdminDashboard() {
       );
   }
 
-  // =========================================================
+  // =======================================================
   // CATEGORY EDIT
-  // =========================================================
+  // =======================================================
 
   function editCategory(category) {
     setEditingCategory(
@@ -378,9 +371,9 @@ export default function AdminDashboard() {
     });
   }
 
-  // =========================================================
+  // =======================================================
   // RESET CATEGORY
-  // =========================================================
+  // =======================================================
 
   function resetCategoryForm() {
     setEditingCategory(null);
@@ -390,9 +383,9 @@ export default function AdminDashboard() {
     });
   }
 
-  // =========================================================
+  // =======================================================
   // SAVE CATEGORY
-  // =========================================================
+  // =======================================================
 
   async function saveCategory(event) {
     event.preventDefault();
@@ -493,9 +486,9 @@ export default function AdminDashboard() {
     }
   }
 
-  // =========================================================
+  // =======================================================
   // DELETE CATEGORY
-  // =========================================================
+  // =======================================================
 
   async function deleteCategory(
     category
@@ -564,9 +557,9 @@ export default function AdminDashboard() {
     await load();
   }
 
-  // =========================================================
+  // =======================================================
   // PRODUCT EDIT
-  // =========================================================
+  // =======================================================
 
   function editProduct(product) {
     setEditing(product.id);
@@ -629,9 +622,9 @@ export default function AdminDashboard() {
     });
   }
 
-  // =========================================================
-  // RESET PRODUCT FORM
-  // =========================================================
+  // =======================================================
+  // RESET PRODUCT
+  // =======================================================
 
   function resetForm() {
     setEditing(null);
@@ -643,9 +636,9 @@ export default function AdminDashboard() {
     setFile(null);
   }
 
-  // =========================================================
+  // =======================================================
   // IMAGE VALIDATION
-  // =========================================================
+  // =======================================================
 
   function validateImage(
     selectedFile
@@ -676,9 +669,9 @@ export default function AdminDashboard() {
     }
   }
 
-  // =========================================================
+  // =======================================================
   // FILE CHANGE
-  // =========================================================
+  // =======================================================
 
   function handleFileChange(e) {
     const selectedFile =
@@ -713,9 +706,9 @@ export default function AdminDashboard() {
     }
   }
 
-  // =========================================================
+  // =======================================================
   // UPLOAD IMAGE
-  // =========================================================
+  // =======================================================
 
   async function uploadImage() {
     if (!file) {
@@ -788,9 +781,9 @@ export default function AdminDashboard() {
     return data.publicUrl;
   }
 
-  // =========================================================
+  // =======================================================
   // SAVE PRODUCT
-  // =========================================================
+  // =======================================================
 
   async function saveProduct(
     event
@@ -956,10 +949,54 @@ export default function AdminDashboard() {
     }
   }
 
-  // =========================================================
+  // =======================================================
+  // CHECK PRODUCT ORDER
+  //
+  // Produk dianggap masih memiliki order apabila
+  // product_id masih terdapat di tabel order_items.
+  //
+  // Jadi:
+  // - stok 0 + masih ada order_items = TIDAK BOLEH HAPUS
+  // - stok 0 + tidak ada order_items = BOLEH HAPUS
+  // =======================================================
+
+  async function checkProductHasOrder(
+    productId
+  ) {
+    const { data, error } =
+      await supabase
+        .from("order_items")
+        .select("id, order_id")
+        .eq(
+          "product_id",
+          productId
+        )
+        .limit(1);
+
+    if (error) {
+      console.error(
+        "CHECK PRODUCT ORDER ERROR:",
+        error
+      );
+
+      throw new Error(
+        `Gagal mengecek order produk: ${error.message}`
+      );
+    }
+
+    return (
+      Array.isArray(data) &&
+      data.length > 0
+    );
+  }
+
+  // =======================================================
   // DELETE PRODUCT
-  // HANYA BOLEH JIKA STOK = 0
-  // =========================================================
+  //
+  // SYARAT:
+  // 1. STOK HARUS 0
+  // 2. TIDAK BOLEH ADA ORDER
+  // =======================================================
 
   async function deleteProduct(id) {
     const product =
@@ -968,7 +1005,10 @@ export default function AdminDashboard() {
           item.id === id
       );
 
-    // Produk tidak ditemukan
+    // -------------------------------------------------------
+    // PRODUK TIDAK DITEMUKAN
+    // -------------------------------------------------------
+
     if (!product) {
       setMessage(
         "Produk tidak ditemukan."
@@ -977,48 +1017,83 @@ export default function AdminDashboard() {
       return;
     }
 
-    // =======================================================
+    // -------------------------------------------------------
     // CEK STOK
-    // =======================================================
+    // -------------------------------------------------------
 
     const stock =
       Number(
         product.stock || 0
       );
 
-    // =======================================================
+    // -------------------------------------------------------
     // STOK MASIH ADA
-    // =======================================================
+    // -------------------------------------------------------
 
     if (stock > 0) {
       setMessage(
-        `Produk "${product.name}" tidak dapat dihapus karena stok masih tersedia (${stock} pcs). Habiskan stok terlebih dahulu.`
+        `Produk "${product.name}" tidak dapat dihapus. Stok masih tersedia sebanyak ${stock} pcs.`
       );
 
       return;
     }
 
-    // =======================================================
-    // STOK SUDAH 0
-    // =======================================================
-
-    const confirmed =
-      window.confirm(
-        `Hapus produk "${product.name}"?\n\nStok produk sudah 0, sehingga produk dapat dihapus.`
-      );
-
-    if (!confirmed) {
-      return;
-    }
-
-    setMessage("");
+    // -------------------------------------------------------
+    // CEK ORDER
+    // -------------------------------------------------------
 
     try {
+      setMessage(
+        `Memeriksa order produk "${product.name}"...`
+      );
+
+      const hasOrder =
+        await checkProductHasOrder(
+          id
+        );
+
+      // -----------------------------------------------------
+      // MASIH ADA ORDER
+      // -----------------------------------------------------
+
+      if (hasOrder) {
+        setMessage(
+          `Produk "${product.name}" tidak dapat dihapus karena masih tercatat dalam order. Data produk dipertahankan untuk riwayat transaksi.`
+        );
+
+        return;
+      }
+
+      // -----------------------------------------------------
+      // KONFIRMASI
+      // -----------------------------------------------------
+
+      const confirmed =
+        window.confirm(
+          `Hapus produk "${product.name}"?\n\nStok: 0 pcs\nOrder: Tidak ada\n\nProduk aman untuk dihapus.`
+        );
+
+      if (!confirmed) {
+        setMessage("");
+        return;
+      }
+
+      setMessage(
+        "Menghapus produk..."
+      );
+
+      // -----------------------------------------------------
+      // DELETE
+      // -----------------------------------------------------
+
       const { error } =
         await supabase
           .from("products")
           .delete()
-          .eq("id", id);
+          .eq(
+            "id",
+            id
+          );
 
       if (error) {
         console.error(
@@ -1033,7 +1108,10 @@ export default function AdminDashboard() {
         return;
       }
 
-      // Jika sedang edit produk tersebut
+      // -----------------------------------------------------
+      // RESET FORM JIKA SEDANG EDIT
+      // -----------------------------------------------------
+
       if (editing === id) {
         resetForm();
       }
@@ -1057,9 +1135,9 @@ export default function AdminDashboard() {
     }
   }
 
-  // =========================================================
-  // ORDER STATUS
-  // =========================================================
+  // =======================================================
+  // UPDATE ORDER STATUS
+  // =======================================================
 
   async function updateOrderStatus(
     id,
@@ -1091,9 +1169,9 @@ export default function AdminDashboard() {
     await load();
   }
 
-  // =========================================================
-  // REVENUE
-  // =========================================================
+  // =======================================================
+  // TOTAL REVENUE
+  // =======================================================
 
   const revenue =
     useMemo(() => {
@@ -1116,9 +1194,9 @@ export default function AdminDashboard() {
         );
     }, [orders]);
 
-  // =========================================================
-  // FILTER REPORT
-  // =========================================================
+  // =======================================================
+  // FILTER ORDERS
+  // =======================================================
 
   const filteredOrders =
     useMemo(() => {
@@ -1200,9 +1278,9 @@ export default function AdminDashboard() {
       orderPeriod,
     ]);
 
-  // =========================================================
+  // =======================================================
   // FILTERED REVENUE
-  // =========================================================
+  // =======================================================
 
   const filteredRevenue =
     useMemo(() => {
@@ -1225,9 +1303,9 @@ export default function AdminDashboard() {
         );
     }, [filteredOrders]);
 
-  // =========================================================
+  // =======================================================
   // ORDER COUNTS
-  // =========================================================
+  // =======================================================
 
   const completedOrders =
     filteredOrders.filter(
@@ -1250,9 +1328,9 @@ export default function AdminDashboard() {
         "cancelled"
     ).length;
 
-  // =========================================================
+  // =======================================================
   // EXPORT PDF
-  // =========================================================
+  // =======================================================
 
   async function exportOrdersPDF() {
     if (
@@ -1476,9 +1554,9 @@ export default function AdminDashboard() {
     }
   }
 
-  // =========================================================
+  // =======================================================
   // LOGOUT
-  // =========================================================
+  // =======================================================
 
   async function handleLogout() {
     try {
@@ -1491,16 +1569,16 @@ export default function AdminDashboard() {
     }
   }
 
-  // =========================================================
-  // RETURN
-  // =========================================================
+  // =======================================================
+  // RENDER
+  // =======================================================
 
   return (
     <main className="admin-page">
 
-      {/* =====================================================
+      {/* =================================================
           MOBILE HEADER
-      ====================================================== */}
+      ================================================== */}
 
       <header className="admin-mobile-header">
 
@@ -1521,9 +1599,9 @@ export default function AdminDashboard() {
 
       </header>
 
-      {/* =====================================================
+      {/* =================================================
           SIDEBAR
-      ====================================================== */}
+      ================================================== */}
 
       <aside
         className={`admin-sidebar ${
@@ -1554,8 +1632,6 @@ export default function AdminDashboard() {
             "Admin"}
         </p>
 
-        {/* PRODUCTS */}
-
         <button
           type="button"
           className={
@@ -1573,8 +1649,6 @@ export default function AdminDashboard() {
           Products
         </button>
 
-        {/* CATEGORIES */}
-
         <button
           type="button"
           className={
@@ -1591,8 +1665,6 @@ export default function AdminDashboard() {
           <Tags size={18} />
           Categories
         </button>
-
-        {/* ORDERS */}
 
         <button
           type="button"
@@ -1613,8 +1685,6 @@ export default function AdminDashboard() {
           Orders
         </button>
 
-        {/* LOGOUT */}
-
         <button
           type="button"
           className="admin-nav logout"
@@ -1628,9 +1698,9 @@ export default function AdminDashboard() {
 
       </aside>
 
-      {/* =====================================================
+      {/* =================================================
           OVERLAY
-      ====================================================== */}
+      ================================================== */}
 
       <div
         className={`admin-sidebar-overlay ${
@@ -1643,19 +1713,20 @@ export default function AdminDashboard() {
         }
       />
 
-      {/* =====================================================
+      {/* =================================================
           CONTENT
-      ====================================================== */}
+      ================================================== */}
 
       <section className="admin-content">
 
-        {/* ===================================================
+        {/* =================================================
             TOP
-        ==================================================== */}
+        ================================================== */}
 
         <div className="admin-top">
 
           <div>
+
             <p className="eyebrow">
               ADMIN / DASHBOARD
             </p>
@@ -1663,6 +1734,7 @@ export default function AdminDashboard() {
             <h1>
               Control center.
             </h1>
+
           </div>
 
           <span className="admin-role">
@@ -1671,13 +1743,14 @@ export default function AdminDashboard() {
 
         </div>
 
-        {/* ===================================================
+        {/* =================================================
             STATS
-        ==================================================== */}
+        ================================================== */}
 
         <div className="stats-grid">
 
           <div className="stat-card">
+
             <span>
               Products
             </span>
@@ -1685,9 +1758,11 @@ export default function AdminDashboard() {
             <strong>
               {products.length}
             </strong>
+
           </div>
 
           <div className="stat-card">
+
             <span>
               Categories
             </span>
@@ -1695,9 +1770,11 @@ export default function AdminDashboard() {
             <strong>
               {categories.length}
             </strong>
+
           </div>
 
           <div className="stat-card">
+
             <span>
               Orders
             </span>
@@ -1705,9 +1782,11 @@ export default function AdminDashboard() {
             <strong>
               {orders.length}
             </strong>
+
           </div>
 
           <div className="stat-card">
+
             <span>
               Revenue
             </span>
@@ -1717,6 +1796,7 @@ export default function AdminDashboard() {
                 revenue
               )}
             </strong>
+
           </div>
 
         </div>
@@ -1727,8 +1807,6 @@ export default function AdminDashboard() {
 
         {tab === "products" && (
           <>
-
-            {/* PRODUCT HEADER */}
 
             <div className="admin-section-heading">
 
@@ -1770,8 +1848,6 @@ export default function AdminDashboard() {
               }
             >
 
-              {/* NAME */}
-
               <label>
                 Nama Produk
 
@@ -1789,9 +1865,8 @@ export default function AdminDashboard() {
                   placeholder="Oversized Basic Tee Black"
                   required
                 />
-              </label>
 
-              {/* CATEGORY */}
+              </label>
 
               <label>
                 Kategori
@@ -1834,8 +1909,6 @@ export default function AdminDashboard() {
 
               </label>
 
-              {/* PRICE */}
-
               <label>
                 Harga
 
@@ -1854,9 +1927,8 @@ export default function AdminDashboard() {
                   placeholder="129000"
                   required
                 />
-              </label>
 
-              {/* COMPARE PRICE */}
+              </label>
 
               <label>
                 Harga Coret
@@ -1875,9 +1947,8 @@ export default function AdminDashboard() {
                   }
                   placeholder="159000"
                 />
-              </label>
 
-              {/* STOCK */}
+              </label>
 
               <label>
                 Stok
@@ -1896,9 +1967,8 @@ export default function AdminDashboard() {
                   }
                   required
                 />
-              </label>
 
-              {/* SKU */}
+              </label>
 
               <label>
                 SKU
@@ -1916,9 +1986,8 @@ export default function AdminDashboard() {
                   }
                   placeholder="WS-TEE-001"
                 />
-              </label>
 
-              {/* SIZE */}
+              </label>
 
               <label>
                 Ukuran
@@ -1935,9 +2004,8 @@ export default function AdminDashboard() {
                   }
                   placeholder="S,M,L,XL"
                 />
-              </label>
 
-              {/* COLORS */}
+              </label>
 
               <label>
                 Warna
@@ -1954,9 +2022,8 @@ export default function AdminDashboard() {
                   }
                   placeholder="Black,White,Grey"
                 />
-              </label>
 
-              {/* DESCRIPTION */}
+              </label>
 
               <label className="full">
                 Deskripsi
@@ -1977,8 +2044,6 @@ export default function AdminDashboard() {
 
               </label>
 
-              {/* IMAGE URL */}
-
               <label className="full">
                 URL Gambar
 
@@ -1997,8 +2062,6 @@ export default function AdminDashboard() {
                 />
 
               </label>
-
-              {/* FILE */}
 
               <label className="file-input full">
 
@@ -2020,8 +2083,6 @@ export default function AdminDashboard() {
 
               </label>
 
-              {/* ACTIVE */}
-
               <label className="check full">
 
                 <input
@@ -2040,8 +2101,6 @@ export default function AdminDashboard() {
                 Produk aktif
 
               </label>
-
-              {/* FEATURED */}
 
               <label className="check full">
 
@@ -2062,8 +2121,6 @@ export default function AdminDashboard() {
 
               </label>
 
-              {/* MESSAGE */}
-
               {message && (
                 <div
                   className="message full"
@@ -2072,8 +2129,6 @@ export default function AdminDashboard() {
                   {message}
                 </div>
               )}
-
-              {/* SUBMIT */}
 
               <button
                 type="submit"
@@ -2089,7 +2144,6 @@ export default function AdminDashboard() {
                       size={17}
                       className="admin-spin"
                     />
-
                     Menyimpan...
                   </>
                 ) : editing ? (
@@ -2097,7 +2151,6 @@ export default function AdminDashboard() {
                     <Pencil
                       size={17}
                     />
-
                     Update Product
                   </>
                 ) : (
@@ -2105,7 +2158,6 @@ export default function AdminDashboard() {
                     <Plus
                       size={17}
                     />
-
                     Add Product
                   </>
                 )}
@@ -2206,10 +2258,6 @@ export default function AdminDashboard() {
                             0
                         );
 
-                      const canDelete =
-                        productStock ===
-                        0;
-
                       return (
                         <tr
                           key={
@@ -2270,13 +2318,11 @@ export default function AdminDashboard() {
                           {/* STOCK */}
 
                           <td>
-
                             <strong>
                               {
                                 productStock
                               }
                             </strong>
-
                           </td>
 
                           {/* STATUS */}
@@ -2321,29 +2367,14 @@ export default function AdminDashboard() {
 
                             <button
                               type="button"
-                              className={
-                                canDelete
-                                  ? "table-action danger"
-                                  : "table-action danger disabled"
-                              }
+                              className="table-action danger"
                               onClick={() =>
                                 deleteProduct(
                                   product.id
                                 )
                               }
-                              aria-label={
-                                canDelete
-                                  ? "Hapus produk"
-                                  : "Produk tidak dapat dihapus karena stok masih ada"
-                              }
-                              title={
-                                canDelete
-                                  ? "Hapus produk"
-                                  : `Tidak dapat dihapus — stok masih ${productStock} pcs`
-                              }
-                              disabled={
-                                !canDelete
-                              }
+                              aria-label="Hapus produk"
+                              title="Hapus produk"
                             >
                               <Trash2
                                 size={16}
@@ -2379,8 +2410,6 @@ export default function AdminDashboard() {
         {tab === "categories" && (
           <>
 
-            {/* CATEGORY HEADER */}
-
             <div className="admin-section-heading">
 
               <div>
@@ -2411,8 +2440,6 @@ export default function AdminDashboard() {
               )}
 
             </div>
-
-            {/* CATEGORY FORM */}
 
             <form
               className="admin-form"
@@ -2506,7 +2533,6 @@ export default function AdminDashboard() {
                       size={17}
                       className="admin-spin"
                     />
-
                     Menyimpan...
                   </>
                 ) : editingCategory ? (
@@ -2514,7 +2540,6 @@ export default function AdminDashboard() {
                     <Pencil
                       size={17}
                     />
-
                     Update Category
                   </>
                 ) : (
@@ -2522,7 +2547,6 @@ export default function AdminDashboard() {
                     <Plus
                       size={17}
                     />
-
                     Add Category
                   </>
                 )}
@@ -2530,8 +2554,6 @@ export default function AdminDashboard() {
               </button>
 
             </form>
-
-            {/* CATEGORY LIST */}
 
             <div className="admin-section-heading">
 
@@ -2573,8 +2595,6 @@ export default function AdminDashboard() {
                       }
                     >
 
-                      {/* CATEGORY ICON */}
-
                       <div className="category-card-icon">
 
                         <FolderOpen
@@ -2582,8 +2602,6 @@ export default function AdminDashboard() {
                         />
 
                       </div>
-
-                      {/* CONTENT */}
 
                       <div className="category-card-content">
 
@@ -2611,11 +2629,7 @@ export default function AdminDashboard() {
 
                       </div>
 
-                      {/* ACTIONS */}
-
                       <div className="category-card-actions">
-
-                        {/* EDIT */}
 
                         <button
                           type="button"
@@ -2632,8 +2646,6 @@ export default function AdminDashboard() {
                             size={16}
                           />
                         </button>
-
-                        {/* DELETE */}
 
                         <button
                           type="button"
@@ -2675,8 +2687,6 @@ export default function AdminDashboard() {
 
         {tab === "orders" && (
           <div className="admin-section">
-
-            {/* ORDER HEADER */}
 
             <div className="admin-section-heading">
 
@@ -2920,14 +2930,12 @@ export default function AdminDashboard() {
                       >
 
                         <td>
-
                           <b>
                             {
                               order.order_number ||
                               "—"
                             }
                           </b>
-
                         </td>
 
                         <td>
