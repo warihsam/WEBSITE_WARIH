@@ -26,6 +26,9 @@ import Contact from "./pages/Contact";
 import Cart from "./pages/Cart";
 import Checkout from "./pages/Checkout";
 
+import Orders from "./pages/Orders";
+import OrderDetail from "./pages/OrderDetail";
+
 // =========================================================
 // AUTH
 // =========================================================
@@ -52,6 +55,7 @@ function UserProtectedRoute({ children }) {
   } = useAuth();
 
   const location = useLocation();
+
 
   // -------------------------------------------------------
   // CEK SESSION
@@ -108,11 +112,11 @@ function UserProtectedRoute({ children }) {
 function ShopLayout() {
   const location = useLocation();
 
-  /*
-   * Login dan Register adalah halaman AUTH.
-   *
-   * Pada halaman ini Navbar dan Footer tidak ditampilkan.
-   */
+
+  // =======================================================
+  // AUTH PAGE
+  // Navbar dan Footer tidak tampil di Login/Register
+  // =======================================================
 
   const isAuthPage =
     location.pathname === "/login" ||
@@ -123,11 +127,14 @@ function ShopLayout() {
     <>
       {/* ===================================================
           NAVBAR
-          Hanya tampil jika bukan Login/Register
       =================================================== */}
 
       {!isAuthPage && <Navbar />}
 
+
+      {/* ===================================================
+          USER ROUTES
+      =================================================== */}
 
       <Routes>
 
@@ -244,12 +251,42 @@ function ShopLayout() {
 
 
         {/* =================================================
+            DAFTAR PESANAN
+        ================================================= */}
+
+        <Route
+          path="/orders"
+          element={
+            <UserProtectedRoute>
+              <Orders />
+            </UserProtectedRoute>
+          }
+        />
+
+
+        {/* =================================================
+            DETAIL PESANAN
+        ================================================= */}
+
+        <Route
+          path="/orders/:id"
+          element={
+            <UserProtectedRoute>
+              <OrderDetail />
+            </UserProtectedRoute>
+          }
+        />
+
+
+        {/* =================================================
             LOGIN
         ================================================= */}
 
         <Route
           path="/login"
-          element={<Login />}
+          element={
+            <Login />
+          }
         />
 
 
@@ -259,7 +296,9 @@ function ShopLayout() {
 
         <Route
           path="/register"
-          element={<Register />}
+          element={
+            <Register />
+          }
         />
 
 
@@ -297,7 +336,6 @@ function ShopLayout() {
 
       {/* ===================================================
           FOOTER
-          Hanya tampil jika bukan Login/Register
       =================================================== */}
 
       {!isAuthPage && <Footer />}
