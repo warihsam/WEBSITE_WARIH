@@ -1,64 +1,16 @@
-import {
-  Link,
-  NavLink,
-  useNavigate,
-} from "react-router-dom";
-
-import {
-  Menu,
-  ShoppingBag,
-  X,
-  LogOut,
-  User,
-} from "lucide-react";
-
+import { Link, NavLink, useNavigate } from "react-router-dom";
+import { Menu, ShoppingBag, X, ClipboardList, LogOut } from "lucide-react";
 import { useState } from "react";
 
 import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
 
-
 export default function Navbar() {
-  // =========================================================
-  // CART
-  // =========================================================
-
   const { count } = useCart();
+  const { user, profile, logout } = useAuth();
 
-
-  // =========================================================
-  // AUTH
-  // =========================================================
-
-  const {
-    user,
-    profile,
-    logout,
-  } = useAuth();
-
-
-  // =========================================================
-  // STATE
-  // =========================================================
-
-  const [open, setOpen] =
-    useState(false);
-
-  const [loggingOut, setLoggingOut] =
-    useState(false);
-
-
-  // =========================================================
-  // NAVIGATION
-  // =========================================================
-
-  const navigate =
-    useNavigate();
-
-
-  // =========================================================
-  // NAVIGATION LINKS
-  // =========================================================
+  const [open, setOpen] = useState(false);
+  const navigate = useNavigate();
 
   const links = [
     ["Home", "/home"],
@@ -68,222 +20,109 @@ export default function Navbar() {
     ["Contact", "/contact"],
   ];
 
-
-  // =========================================================
-  // LOGOUT
-  // =========================================================
-
   const handleLogout = async () => {
-    if (loggingOut) {
-      return;
-    }
+    setOpen(false);
 
     try {
-      setLoggingOut(true);
-
-      setOpen(false);
-
-      const result =
-        await logout();
-
-      if (!result?.success) {
-        console.error(
-          "LOGOUT FAILED:",
-          result?.error
-        );
-
-        alert(
-          result?.error ||
-            "Logout gagal. Silakan coba lagi."
-        );
-
-        return;
-      }
-
-      // -----------------------------------------------------
-      // Berhasil logout
-      // -----------------------------------------------------
-
-      navigate("/login", {
-        replace: true,
-      });
-
+      await logout();
+      navigate("/login", { replace: true });
     } catch (error) {
-      console.error(
-        "LOGOUT ERROR:",
-        error
-      );
-
-      alert(
-        error?.message ||
-          "Terjadi kesalahan saat logout."
-      );
-
-    } finally {
-      setLoggingOut(false);
+      console.error("LOGOUT ERROR:", error);
     }
   };
 
-
-  // =========================================================
-  // USER NAME
-  // =========================================================
-
-  const userName =
-    profile?.full_name ||
-    user?.user_metadata?.full_name ||
-    user?.email?.split("@")[0] ||
-    "User";
-
-
   return (
     <header className="navbar">
-
       <div className="container nav-inner">
 
-
-        {/* ===================================================
-            BRAND
-        =================================================== */}
-
+        {/* LOGO */}
         <Link
           className="brand"
           to="/home"
-          onClick={() =>
-            setOpen(false)
-          }
+          onClick={() => setOpen(false)}
         >
-          WS
-          <span>
-            FASHION
-          </span>
+          WS<span>FASHION</span>
         </Link>
 
+        {/* NAVIGATION */}
+        <nav className={`nav-links ${open ? "open" : ""}`}>
 
-        {/* ===================================================
-            NAVIGATION
-        =================================================== */}
+          {links.map(([label, href]) => (
+            <NavLink
+              key={href}
+              to={href}
+              onClick={() => setOpen(false)}
+              className={({ isActive }) =>
+                isActive ? "active" : ""
+              }
+            >
+              {label}
+            </NavLink>
+          ))}
 
-        <nav
-          className={`nav-links ${
-            open ? "open" : ""
-          }`}
-        >
+          {/* PESANAN */}
+          <NavLink
+            to="/orders"
+            onClick={() => setOpen(false)}
+            className={({ isActive }) =>
+              `nav-order-link ${isActive ? "active" : ""}`
+            }
+          >
+            <ClipboardList size={17} />
+            <span>Pesanan</span>
+          </NavLink>
 
-          {links.map(
-            ([label, href]) => (
-              <NavLink
-                key={href}
-                to={href}
-                onClick={() =>
-                  setOpen(false)
-                }
-              >
-                {label}
-              </NavLink>
-            )
-          )}
+          {/* MOBILE LOGOUT */}
+          <button
+            className="mobile-logout"
+            onClick={handleLogout}
+          >
+            <LogOut size={17} />
+            Keluar
+          </button>
 
         </nav>
 
-
-        {/* ===================================================
-            ACTIONS
-        =================================================== */}
-
+        {/* RIGHT ACTIONS */}
         <div className="nav-actions">
 
 
-          {/* =================================================
-              USER
-          ================================================= */}
-
-          <div className="nav-user">
-
-            <User size={17} />
-
-            <span>
-              {userName}
-            </span>
-
-          </div>
-
-
-          {/* =================================================
-              CART
-          ================================================= */}
-
+          {/* CART */}
           <button
             className="icon-button cart-button"
-            onClick={() => {
-              setOpen(false);
-
-              navigate("/cart");
-            }}
+            onClick={() => navigate("/cart")}
             aria-label="Keranjang"
+            title="Keranjang"
           >
-
-            <ShoppingBag
-              size={20}
-            />
+            <ShoppingBag size={20} />
 
             {count > 0 && (
-              <span>
-                {count}
-              </span>
+              <span>{count}</span>
             )}
-
           </button>
 
+          {/* USER */}
+          <div className="nav-user">
+            <div className="nav-user-info">
+              <strong>
+                {user?.email || "User"}
+              </strong>
+            </div>
 
-          {/* =================================================
-              LOGOUT
-          ================================================= */}
+            
+          </div>
 
-          <button
-            className="logout-button"
-            onClick={handleLogout}
-            disabled={loggingOut}
-            title="Logout"
-          >
-
-            <LogOut
-              size={18}
-            />
-
-            <span>
-              {loggingOut
-                ? "Keluar..."
-                : "Logout"}
-            </span>
-
-          </button>
-
-
-          {/* =================================================
-              MOBILE MENU
-          ================================================= */}
-
+          {/* MOBILE MENU */}
           <button
             className="mobile-menu"
-            onClick={() =>
-              setOpen(!open)
-            }
+            onClick={() => setOpen(!open)}
             aria-label="Menu"
           >
-
-            {open ? (
-              <X />
-            ) : (
-              <Menu />
-            )}
-
+            {open ? <X /> : <Menu />}
           </button>
 
         </div>
-
       </div>
-
     </header>
   );
 }
