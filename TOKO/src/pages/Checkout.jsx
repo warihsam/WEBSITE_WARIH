@@ -59,7 +59,10 @@ export default function Checkout() {
         } = await supabase.auth.getUser();
 
         if (userError) {
-          console.warn("PROFILE USER WARNING:", userError);
+          console.warn(
+            "PROFILE USER WARNING:",
+            userError
+          );
           return;
         }
 
@@ -188,7 +191,7 @@ export default function Checkout() {
   };
 
   // =========================================================
-  // VALIDATION
+  // VALIDATION FORM
   // =========================================================
 
   const validateForm = () => {
@@ -225,11 +228,205 @@ export default function Checkout() {
   };
 
   // =========================================================
+  // CEK STOK TERBARU
+  // =========================================================
+
+  const validateStock = async () => {
+    try {
+      for (const item of cartItems) {
+        const product =
+          item.product || item;
+
+        const productId =
+          product.id;
+
+        const quantity = Number(
+          item.quantity ??
+            item.qty ??
+            1
+        );
+
+        if (!productId) {
+          return `Produk "${
+            product.name || "Produk"
+          }" tidak memiliki ID produk.`;
+        }
+
+        if (quantity <= 0) {
+          return `Jumlah produk "${
+            product.name || "Produk"
+          }" tidak valid.`;
+        }
+
+        const {
+          data: currentProduct,
+          error: productError,
+        } = await supabase
+          .from("products")
+          .select(
+            "id, name, stock, is_active"
+          )
+          .eq("id", productId)
+          .maybeSingle();
+
+        if (productError) {
+          console.error(
+            "STOCK CHECK ERROR:",
+            productError
+          );
+
+          return `Gagal mengecek stok "${
+            product.name || "Produk"
+          }".`;
+        }
+
+        if (!currentProduct) {
+          return `Produk "${
+            product.name || "Produk"
+          }" sudah tidak tersedia.`;
+        }
+
+        if (!currentProduct.is_active) {
+          return `Produk "${
+            currentProduct.name
+          }" sudah tidak aktif.`;
+        }
+
+        const stock = Number(
+          currentProduct.stock || 0
+        );
+
+        if (stock <= 0) {
+          return `Stok "${
+            currentProduct.name
+          }" sudah habis.`;
+        }
+
+        if (quantity > stock) {
+          return `Stok "${
+            currentProduct.name
+          }" hanya tersisa ${stock}. Jumlah di keranjang: ${quantity}.`;
+        }
+      }
+
+      return "";
+    } catch (err) {
+      console.error(
+        "VALIDATE STOCK ERROR:",
+        err
+      );
+
+      return "Gagal memeriksa stok produk.";
+    }
+  };
+
+  // =========================================================
+  // KURANGI STOK
+  // =========================================================
+
+  const decreaseProductStock = async (
+    orderItems
+  ) => {
+    console.log(
+      "========================================"
+    );
+
+    console.log(
+      "=== DECREASING PRODUCT STOCK ==="
+    );
+
+    for (const item of orderItems) {
+      if (!item.product_id) {
+        throw new Error(
+          `Produk "${item.product_name}" tidak memiliki ID produk.`
+        );
+      }
+
+      const quantity = Number(
+        item.quantity || 0
+      );
+
+      if (quantity <= 0) {
+        throw new Error(
+          `Jumlah produk "${item.product_name}" tidak valid.`
+        );
+      }
+
+      console.log(
+        "MENGURANGI STOK:",
+        item.product_name
+      );
+
+      console.log(
+        "PRODUCT ID:",
+        item.product_id
+      );
+
+      console.log(
+        "QUANTITY:",
+        quantity
+      );
+
+      const {
+        data: remainingStock,
+        error: stockError,
+      } = await supabase.rpc(
+        "decrease_product_stock",
+        {
+          p_product_id:
+            item.product_id,
+
+          p_quantity:
+            quantity,
+        }
+      );
+
+      if (stockError) {
+        console.error(
+          "STOCK UPDATE ERROR:",
+          stockError
+        );
+
+        if (
+          stockError.message?.includes(
+            "Stok produk tidak mencukupi"
+          )
+        ) {
+          throw new Error(
+            `Stok "${item.product_name}" tidak mencukupi. Kemungkinan stok baru saja dibeli oleh pelanggan lain.`
+          );
+        }
+
+        throw new Error(
+          `Gagal mengurangi stok "${item.product_name}".`
+        );
+      }
+
+      console.log(
+        `STOK "${item.product_name}" SETELAH CHECKOUT:`,
+        remainingStock
+      );
+    }
+
+    console.log(
+      "=== ALL PRODUCT STOCK UPDATED ==="
+    );
+
+    console.log(
+      "========================================"
+    );
+  };
+
+  // =========================================================
   // CHECKOUT
   // =========================================================
 
   const handleCheckout = async (e) => {
     e.preventDefault();
+
+    if (loading) {
+      return;
+    }
 
     console.log(
       "========================================"
@@ -263,7 +460,7 @@ export default function Checkout() {
     setError("");
 
     // -------------------------------------------------------
-    // VALIDATION
+    // VALIDASI FORM
     // -------------------------------------------------------
 
     const validationError =
@@ -282,6 +479,34 @@ export default function Checkout() {
 
     try {
       setLoading(true);
+
+      // -----------------------------------------------------
+      // CEK STOK TERBARU
+      // -----------------------------------------------------
+
+      console.log(
+        "=== CHECKING LATEST STOCK ==="
+      );
+
+      const stockValidationError =
+        await validateStock();
+
+      if (stockValidationError) {
+        console.error(
+          "STOCK VALIDATION ERROR:",
+          stockValidationError
+        );
+
+        setError(
+          stockValidationError
+        );
+
+        return;
+      }
+
+      console.log(
+        "=== STOCK VALIDATION PASSED ==="
+      );
 
       // -----------------------------------------------------
       // CEK USER
@@ -320,11 +545,6 @@ export default function Checkout() {
       }
 
       console.log(
-        "AUTH USER:",
-        user
-      );
-
-      console.log(
         "AUTH USER ID:",
         user.id
       );
@@ -344,35 +564,12 @@ export default function Checkout() {
       // -----------------------------------------------------
       // STATUS
       // -----------------------------------------------------
-      //
-      // Sesuai constraint database:
-      //
-      // pending
-      // confirmed
-      // processing
-      // shipped
-      // completed
-      // cancelled
-      //
-      // Untuk order baru gunakan pending.
-      // -----------------------------------------------------
 
-      const initialStatus = "pending";
+      const initialStatus =
+        "pending";
 
       const initialPaymentStatus =
-        paymentMethod === "cod"
-          ? "unpaid"
-          : "unpaid";
-
-      console.log(
-        "INITIAL STATUS:",
-        initialStatus
-      );
-
-      console.log(
-        "PAYMENT STATUS:",
-        initialPaymentStatus
-      );
+        "unpaid";
 
       // -----------------------------------------------------
       // DATA ORDER
@@ -381,7 +578,8 @@ export default function Checkout() {
       const orderPayload = {
         user_id: user.id,
 
-        order_number: orderNumber,
+        order_number:
+          orderNumber,
 
         customer_name:
           form.name.trim(),
@@ -393,15 +591,18 @@ export default function Checkout() {
           form.address.trim(),
 
         notes:
-          form.notes.trim() || null,
+          form.notes.trim() ||
+          null,
 
         subtotal,
 
-        shipping_cost: shippingCost,
+        shipping_cost:
+          shippingCost,
 
         total,
 
-        status: initialStatus,
+        status:
+          initialStatus,
 
         payment_status:
           initialPaymentStatus,
@@ -411,25 +612,17 @@ export default function Checkout() {
       };
 
       console.log(
-        "========================================"
-      );
-
-      console.log(
-        "=== INSERTING ORDER ==="
-      );
-
-      console.log(
         "ORDER PAYLOAD:",
         orderPayload
-      );
-
-      console.log(
-        "========================================"
       );
 
       // -----------------------------------------------------
       // INSERT ORDER
       // -----------------------------------------------------
+
+      console.log(
+        "=== INSERTING ORDER ==="
+      );
 
       const {
         data: createdOrder,
@@ -442,64 +635,20 @@ export default function Checkout() {
 
       if (orderError) {
         console.error(
-          "========================================"
-        );
-
-        console.error(
-          "CREATE ORDER ERROR:"
-        );
-
-        console.error(
+          "CREATE ORDER ERROR:",
           orderError
-        );
-
-        console.error(
-          "ERROR MESSAGE:",
-          orderError.message
-        );
-
-        console.error(
-          "ERROR CODE:",
-          orderError.code
-        );
-
-        console.error(
-          "ERROR DETAILS:",
-          orderError.details
-        );
-
-        console.error(
-          "ERROR HINT:",
-          orderError.hint
-        );
-
-        console.error(
-          "========================================"
         );
 
         throw orderError;
       }
 
       console.log(
-        "========================================"
-      );
-
-      console.log(
-        "=== ORDER CREATED SUCCESSFULLY ==="
-      );
-
-      console.log(
-        "CREATED ORDER:",
-        createdOrder
+        "=== ORDER CREATED ==="
       );
 
       console.log(
         "ORDER ID:",
         createdOrder.id
-      );
-
-      console.log(
-        "========================================"
       );
 
       // -----------------------------------------------------
@@ -509,19 +658,6 @@ export default function Checkout() {
       console.log(
         "=== BUILDING ORDER ITEMS ==="
       );
-
-      /*
-       * PENTING:
-       *
-       * Jangan mengirim subtotal.
-       *
-       * Kolom order_items.subtotal adalah
-       * GENERATED COLUMN di database.
-       *
-       * Database akan menghitung:
-       *
-       * price × quantity
-       */
 
       const orderItems =
         cartItems.map(
@@ -535,11 +671,12 @@ export default function Checkout() {
                 0
             );
 
-            const quantity = Number(
-              item.quantity ??
-                item.qty ??
-                1
-            );
+            const quantity =
+              Number(
+                item.quantity ??
+                  item.qty ??
+                  1
+              );
 
             const selectedSize =
               item.selected_size ??
@@ -551,12 +688,15 @@ export default function Checkout() {
               item.color ??
               null;
 
+            const productId =
+              product.id ?? null;
+
             const orderItem = {
               order_id:
                 createdOrder.id,
 
               product_id:
-                product.id ?? null,
+                productId,
 
               product_name:
                 product.name ||
@@ -574,7 +714,9 @@ export default function Checkout() {
             };
 
             console.log(
-              `ORDER ITEM ${index + 1}:`,
+              `ORDER ITEM ${
+                index + 1
+              }:`,
               orderItem
             );
 
@@ -586,6 +728,22 @@ export default function Checkout() {
         "ALL ORDER ITEMS:",
         orderItems
       );
+
+      // -----------------------------------------------------
+      // PASTIKAN SEMUA PRODUK VALID
+      // -----------------------------------------------------
+
+      const invalidProduct =
+        orderItems.find(
+          (item) =>
+            !item.product_id
+        );
+
+      if (invalidProduct) {
+        throw new Error(
+          `Produk "${invalidProduct.product_name}" tidak memiliki ID yang valid.`
+        );
+      }
 
       // -----------------------------------------------------
       // INSERT ORDER ITEMS
@@ -605,51 +763,28 @@ export default function Checkout() {
 
       if (itemsError) {
         console.error(
-          "========================================"
-        );
-
-        console.error(
-          "CREATE ORDER ITEMS ERROR:"
-        );
-
-        console.error(
+          "CREATE ORDER ITEMS ERROR:",
           itemsError
-        );
-
-        console.error(
-          "ERROR MESSAGE:",
-          itemsError.message
-        );
-
-        console.error(
-          "ERROR CODE:",
-          itemsError.code
-        );
-
-        console.error(
-          "ERROR DETAILS:",
-          itemsError.details
-        );
-
-        console.error(
-          "ERROR HINT:",
-          itemsError.hint
-        );
-
-        console.error(
-          "========================================"
         );
 
         throw itemsError;
       }
 
       console.log(
-        "=== ORDER ITEMS CREATED SUCCESSFULLY ==="
+        "=== ORDER ITEMS CREATED ==="
       );
 
       console.log(
         "INSERTED ITEMS:",
         insertedItems
+      );
+
+      // -----------------------------------------------------
+      // KURANGI STOK
+      // -----------------------------------------------------
+
+      await decreaseProductStock(
+        orderItems
       );
 
       // -----------------------------------------------------
@@ -672,7 +807,8 @@ export default function Checkout() {
             initialStatus,
 
           message:
-            paymentMethod === "cod"
+            paymentMethod ===
+            "cod"
               ? "Pesanan berhasil dibuat dan menunggu konfirmasi."
               : "Pesanan berhasil dibuat dan menunggu pembayaran.",
         });
@@ -791,6 +927,20 @@ export default function Checkout() {
         "Terjadi kesalahan saat membuat pesanan.";
 
       // -----------------------------------------------------
+      // ERROR STOK
+      // -----------------------------------------------------
+
+      if (
+        message
+          .toLowerCase()
+          .includes("stok")
+      ) {
+        message =
+          err?.message ||
+          "Stok produk tidak mencukupi.";
+      }
+
+      // -----------------------------------------------------
       // ERROR RLS
       // -----------------------------------------------------
 
@@ -798,7 +948,7 @@ export default function Checkout() {
         err?.code === "42501"
       ) {
         message =
-          "Checkout ditolak oleh Row Level Security (RLS) Supabase. Periksa policy INSERT pada tabel orders, order_items, dan order_tracking.";
+          "Checkout ditolak oleh Row Level Security (RLS) Supabase. Periksa policy INSERT pada tabel orders, order_items, dan order_tracking serta permission function stok.";
       }
 
       // -----------------------------------------------------
@@ -846,7 +996,7 @@ export default function Checkout() {
       }
 
       // -----------------------------------------------------
-      // DUPLICATE
+      // ERROR DUPLICATE
       // -----------------------------------------------------
 
       if (
@@ -1122,6 +1272,7 @@ export default function Checkout() {
                     onChange={handleChange}
                     placeholder="Nama lengkap"
                     autoComplete="name"
+                    disabled={loading}
                   />
 
                 </div>
@@ -1140,6 +1291,7 @@ export default function Checkout() {
                     onChange={handleChange}
                     placeholder="08xxxxxxxxxx"
                     autoComplete="tel"
+                    disabled={loading}
                   />
 
                 </div>
@@ -1160,6 +1312,7 @@ export default function Checkout() {
                   placeholder="Jalan, nomor rumah, desa/kelurahan, kecamatan, kota/kabupaten, provinsi, kode pos"
                   rows={5}
                   autoComplete="street-address"
+                  disabled={loading}
                 />
 
               </div>
@@ -1167,14 +1320,11 @@ export default function Checkout() {
               <div className="form-group">
 
                 <label htmlFor="notes">
-
                   Catatan Pesanan
-
                   <span>
                     {" "}
                     (opsional)
                   </span>
-
                 </label>
 
                 <textarea
@@ -1184,6 +1334,7 @@ export default function Checkout() {
                   onChange={handleChange}
                   placeholder="Contoh: Tolong kirim sore hari."
                   rows={3}
+                  disabled={loading}
                 />
 
               </div>
@@ -1237,18 +1388,13 @@ export default function Checkout() {
                             : ""
                         }`}
                         onClick={() => {
-
-                          console.log(
-                            "PAYMENT SELECTED:",
-                            option.id
-                          );
-
                           setPaymentMethod(
                             option.id
                           );
 
                           setError("");
                         }}
+                        disabled={loading}
                       >
 
                         <div className="payment-option-icon">
@@ -1601,11 +1747,6 @@ export default function Checkout() {
                 type="submit"
                 className="checkout-submit"
                 disabled={loading}
-                onClick={() => {
-                  console.log(
-                    "=== BUTTON BUAT PESANAN DIKLIK ==="
-                  );
-                }}
               >
 
                 {loading ? (
@@ -1623,11 +1764,9 @@ export default function Checkout() {
               </button>
 
               <p className="checkout-security">
-
                 Pesanan akan tersimpan di
                 akun kamu dan dapat dilacak
                 melalui halaman Pesanan Saya.
-
               </p>
 
             </section>
