@@ -1,271 +1,1643 @@
-import { useState } from "react";
-import { ArrowLeft, CheckCircle2, MessageCircle } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import {
+  ArrowLeft,
+  CheckCircle2,
+  CreditCard,
+  MapPin,
+  Package,
+  ShoppingBag,
+  Truck,
+} from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
+
 import { supabase } from "../lib/supabase";
 import { useCart } from "../context/CartContext";
 import { formatRupiah } from "../utils/format";
 
-const waNumber = import.meta.env.VITE_WHATSAPP_NUMBER || "";
+import "./Checkout.css";
 
 export default function Checkout() {
-  const { items, total, clearCart } = useCart();
   const navigate = useNavigate();
+
+  const {
+    cartItems = [],
+    cartTotal = 0,
+    clearCart,
+  } = useCart();
+
+  // =========================================================
+  // STATE
+  // =========================================================
 
   const [form, setForm] = useState({
     name: "",
     phone: "",
     address: "",
+    notes: "",
   });
 
-  const [error, setError] = useState("");
+  const [paymentMethod, setPaymentMethod] = useState("");
+
   const [loading, setLoading] = useState(false);
-  const [done, setDone] = useState(false);
 
-  if (!items.length && !done) return <NavigateToCart />;
+  const [error, setError] = useState("");
 
-  async function submit(e) {
+  const [orderSuccess, setOrderSuccess] = useState(null);
+
+  // =========================================================
+  // AMBIL PROFILE USER
+  // =========================================================
+
+  useEffect(() => {
+    let mounted = true;
+
+    const loadProfile = async () => {
+      try {
+        const {
+          data: { user },
+          error: userError,
+        } = await supabase.auth.getUser();
+
+        if (userError) {
+          console.warn("PROFILE USER WARNING:", userError);
+          return;
+        }
+
+        if (!user || !mounted) {
+          return;
+        }
+
+        const {
+          data: profile,
+          error: profileError,
+        } = await supabase
+          .from("profiles")
+          .select("full_name, phone")
+          .eq("id", user.id)
+          .maybeSingle();
+
+        if (profileError) {
+          console.warn(
+            "PROFILE LOAD WARNING:",
+            profileError
+          );
+          return;
+        }
+
+        if (!mounted) {
+          return;
+        }
+
+        if (profile) {
+          setForm((prev) => ({
+            ...prev,
+
+            name:
+              prev.name ||
+              profile.full_name ||
+              "",
+
+            phone:
+              prev.phone ||
+              profile.phone ||
+              "",
+          }));
+        }
+      } catch (err) {
+        console.warn(
+          "PROFILE LOAD ERROR:",
+          err
+        );
+      }
+    };
+
+    loadProfile();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  // =========================================================
+  // TOTAL
+  // =========================================================
+
+  const subtotal = useMemo(() => {
+    return Number(cartTotal || 0);
+  }, [cartTotal]);
+
+  const shippingCost = 0;
+
+  const total = subtotal + shippingCost;
+
+  // =========================================================
+  // PAYMENT OPTIONS
+  // =========================================================
+
+  const paymentOptions = [
+    {
+      id: "bank_transfer",
+      title: "Transfer Bank",
+      description:
+        "Transfer manual ke rekening WS Fashion",
+      icon: CreditCard,
+    },
+    {
+      id: "qris",
+      title: "QRIS",
+      description:
+        "Bayar menggunakan QRIS",
+      icon: CreditCard,
+    },
+    {
+      id: "cod",
+      title: "COD",
+      description:
+        "Bayar ketika barang diterima",
+      icon: Package,
+    },
+  ];
+
+  // =========================================================
+  // FORM CHANGE
+  // =========================================================
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+
+    setForm((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  // =========================================================
+  // ORDER NUMBER
+  // =========================================================
+
+  const generateOrderNumber = () => {
+    const timestamp = Date.now()
+      .toString()
+      .slice(-8);
+
+    const random = Math.floor(
+      100 + Math.random() * 900
+    );
+
+    return `WS-${timestamp}${random}`;
+  };
+
+  // =========================================================
+  // VALIDATION
+  // =========================================================
+
+  const validateForm = () => {
+    if (!form.name.trim()) {
+      return "Nama penerima wajib diisi.";
+    }
+
+    if (!form.phone.trim()) {
+      return "Nomor WhatsApp wajib diisi.";
+    }
+
+    const phoneNumber = form.phone.replace(
+      /\D/g,
+      ""
+    );
+
+    if (phoneNumber.length < 10) {
+      return "Nomor WhatsApp tidak valid.";
+    }
+
+    if (!form.address.trim()) {
+      return "Alamat pengiriman wajib diisi.";
+    }
+
+    if (!paymentMethod) {
+      return "Silakan pilih metode pembayaran.";
+    }
+
+    if (!cartItems.length) {
+      return "Keranjang masih kosong.";
+    }
+
+    return "";
+  };
+
+  // =========================================================
+  // CHECKOUT
+  // =========================================================
+
+  const handleCheckout = async (e) => {
     e.preventDefault();
+
+    console.log(
+      "========================================"
+    );
+
+    console.log(
+      "=== CHECKOUT BUTTON CLICKED ==="
+    );
+
+    console.log("FORM:", form);
+
+    console.log(
+      "PAYMENT METHOD:",
+      paymentMethod
+    );
+
+    console.log(
+      "CART ITEMS:",
+      cartItems
+    );
+
+    console.log(
+      "CART TOTAL:",
+      cartTotal
+    );
+
+    console.log(
+      "========================================"
+    );
+
     setError("");
 
-   if (
-  !form.name.trim() ||
-  !form.phone.trim() ||
-  !form.address.trim()
-) {
-  return setError("Semua data checkout wajib diisi.");
-}
+    // -------------------------------------------------------
+    // VALIDATION
+    // -------------------------------------------------------
 
-const phone = form.phone.replace(/\D/g, "");
+    const validationError =
+      validateForm();
 
-if (phone.length < 10 || phone.length > 15) {
-  return setError("Nomor WhatsApp tidak valid.");
-}
-
-    if (!waNumber || waNumber.includes("X")) {
-      return setError(
-        "Nomor WhatsApp toko belum diatur di VITE_WHATSAPP_NUMBER."
+    if (validationError) {
+      console.error(
+        "VALIDATION ERROR:",
+        validationError
       );
+
+      setError(validationError);
+
+      return;
     }
 
-    setLoading(true);
+    try {
+      setLoading(true);
 
-    // GENERATE ORDER ID DI BROWSER
-    const orderId = crypto.randomUUID();
+      // -----------------------------------------------------
+      // CEK USER
+      // -----------------------------------------------------
 
-    // GENERATE ORDER NUMBER
-    const orderNumber =
-      "WS-" +
-      crypto
-        .randomUUID()
-        .replace(/-/g, "")
-        .substring(0, 10)
-        .toUpperCase();
+      console.log(
+        "=== CHECKING AUTH USER ==="
+      );
 
-    // CREATE ORDER
-    // Tidak memakai .select() agar tidak terkena SELECT RLS
-    const { error: orderError } = await supabase
-      .from("orders")
-      .insert({
-        id: orderId,
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser();
+
+      if (userError) {
+        console.error(
+          "GET USER ERROR:",
+          userError
+        );
+
+        throw userError;
+      }
+
+      if (!user) {
+        console.error(
+          "NO AUTHENTICATED USER"
+        );
+
+        setError(
+          "Silakan login terlebih dahulu sebelum melakukan checkout."
+        );
+
+        navigate("/login");
+
+        return;
+      }
+
+      console.log(
+        "AUTH USER:",
+        user
+      );
+
+      console.log(
+        "AUTH USER ID:",
+        user.id
+      );
+
+      // -----------------------------------------------------
+      // ORDER NUMBER
+      // -----------------------------------------------------
+
+      const orderNumber =
+        generateOrderNumber();
+
+      console.log(
+        "ORDER NUMBER:",
+        orderNumber
+      );
+
+      // -----------------------------------------------------
+      // STATUS
+      // -----------------------------------------------------
+      //
+      // Sesuai constraint database:
+      //
+      // pending
+      // confirmed
+      // processing
+      // shipped
+      // completed
+      // cancelled
+      //
+      // Untuk order baru gunakan pending.
+      // -----------------------------------------------------
+
+      const initialStatus = "pending";
+
+      const initialPaymentStatus =
+        paymentMethod === "cod"
+          ? "unpaid"
+          : "unpaid";
+
+      console.log(
+        "INITIAL STATUS:",
+        initialStatus
+      );
+
+      console.log(
+        "PAYMENT STATUS:",
+        initialPaymentStatus
+      );
+
+      // -----------------------------------------------------
+      // DATA ORDER
+      // -----------------------------------------------------
+
+      const orderPayload = {
+        user_id: user.id,
+
         order_number: orderNumber,
-        customer_name: form.name,
-        customer_phone: form.phone,
-        customer_address: form.address,
-        subtotal: total,
-        shipping_cost: 0,
-        total: total,
-        status: "pending",
-        payment_status: "unpaid",
+
+        customer_name:
+          form.name.trim(),
+
+        customer_phone:
+          form.phone.trim(),
+
+        customer_address:
+          form.address.trim(),
+
+        notes:
+          form.notes.trim() || null,
+
+        subtotal,
+
+        shipping_cost: shippingCost,
+
+        total,
+
+        status: initialStatus,
+
+        payment_status:
+          initialPaymentStatus,
+
+        payment_method:
+          paymentMethod,
+      };
+
+      console.log(
+        "========================================"
+      );
+
+      console.log(
+        "=== INSERTING ORDER ==="
+      );
+
+      console.log(
+        "ORDER PAYLOAD:",
+        orderPayload
+      );
+
+      console.log(
+        "========================================"
+      );
+
+      // -----------------------------------------------------
+      // INSERT ORDER
+      // -----------------------------------------------------
+
+      const {
+        data: createdOrder,
+        error: orderError,
+      } = await supabase
+        .from("orders")
+        .insert(orderPayload)
+        .select()
+        .single();
+
+      if (orderError) {
+        console.error(
+          "========================================"
+        );
+
+        console.error(
+          "CREATE ORDER ERROR:"
+        );
+
+        console.error(
+          orderError
+        );
+
+        console.error(
+          "ERROR MESSAGE:",
+          orderError.message
+        );
+
+        console.error(
+          "ERROR CODE:",
+          orderError.code
+        );
+
+        console.error(
+          "ERROR DETAILS:",
+          orderError.details
+        );
+
+        console.error(
+          "ERROR HINT:",
+          orderError.hint
+        );
+
+        console.error(
+          "========================================"
+        );
+
+        throw orderError;
+      }
+
+      console.log(
+        "========================================"
+      );
+
+      console.log(
+        "=== ORDER CREATED SUCCESSFULLY ==="
+      );
+
+      console.log(
+        "CREATED ORDER:",
+        createdOrder
+      );
+
+      console.log(
+        "ORDER ID:",
+        createdOrder.id
+      );
+
+      console.log(
+        "========================================"
+      );
+
+      // -----------------------------------------------------
+      // BUILD ORDER ITEMS
+      // -----------------------------------------------------
+
+      console.log(
+        "=== BUILDING ORDER ITEMS ==="
+      );
+
+      /*
+       * PENTING:
+       *
+       * Jangan mengirim subtotal.
+       *
+       * Kolom order_items.subtotal adalah
+       * GENERATED COLUMN di database.
+       *
+       * Database akan menghitung:
+       *
+       * price × quantity
+       */
+
+      const orderItems =
+        cartItems.map(
+          (item, index) => {
+            const product =
+              item.product || item;
+
+            const price = Number(
+              item.price ??
+                product.price ??
+                0
+            );
+
+            const quantity = Number(
+              item.quantity ??
+                item.qty ??
+                1
+            );
+
+            const selectedSize =
+              item.selected_size ??
+              item.size ??
+              null;
+
+            const selectedColor =
+              item.selected_color ??
+              item.color ??
+              null;
+
+            const orderItem = {
+              order_id:
+                createdOrder.id,
+
+              product_id:
+                product.id ?? null,
+
+              product_name:
+                product.name ||
+                "Produk",
+
+              price,
+
+              quantity,
+
+              selected_size:
+                selectedSize,
+
+              selected_color:
+                selectedColor,
+            };
+
+            console.log(
+              `ORDER ITEM ${index + 1}:`,
+              orderItem
+            );
+
+            return orderItem;
+          }
+        );
+
+      console.log(
+        "ALL ORDER ITEMS:",
+        orderItems
+      );
+
+      // -----------------------------------------------------
+      // INSERT ORDER ITEMS
+      // -----------------------------------------------------
+
+      console.log(
+        "=== INSERTING ORDER ITEMS ==="
+      );
+
+      const {
+        data: insertedItems,
+        error: itemsError,
+      } = await supabase
+        .from("order_items")
+        .insert(orderItems)
+        .select();
+
+      if (itemsError) {
+        console.error(
+          "========================================"
+        );
+
+        console.error(
+          "CREATE ORDER ITEMS ERROR:"
+        );
+
+        console.error(
+          itemsError
+        );
+
+        console.error(
+          "ERROR MESSAGE:",
+          itemsError.message
+        );
+
+        console.error(
+          "ERROR CODE:",
+          itemsError.code
+        );
+
+        console.error(
+          "ERROR DETAILS:",
+          itemsError.details
+        );
+
+        console.error(
+          "ERROR HINT:",
+          itemsError.hint
+        );
+
+        console.error(
+          "========================================"
+        );
+
+        throw itemsError;
+      }
+
+      console.log(
+        "=== ORDER ITEMS CREATED SUCCESSFULLY ==="
+      );
+
+      console.log(
+        "INSERTED ITEMS:",
+        insertedItems
+      );
+
+      // -----------------------------------------------------
+      // TRACKING AWAL
+      // -----------------------------------------------------
+
+      console.log(
+        "=== CREATING INITIAL TRACKING ==="
+      );
+
+      const {
+        error: trackingError,
+      } = await supabase
+        .from("order_tracking")
+        .insert({
+          order_id:
+            createdOrder.id,
+
+          status:
+            initialStatus,
+
+          message:
+            paymentMethod === "cod"
+              ? "Pesanan berhasil dibuat dan menunggu konfirmasi."
+              : "Pesanan berhasil dibuat dan menunggu pembayaran.",
+        });
+
+      if (trackingError) {
+        console.warn(
+          "TRACKING INSERT WARNING:",
+          trackingError
+        );
+
+        console.warn(
+          "Tracking gagal dibuat, tetapi order tetap berhasil."
+        );
+      } else {
+        console.log(
+          "=== INITIAL TRACKING CREATED ==="
+        );
+      }
+
+      // -----------------------------------------------------
+      // CLEAR CART
+      // -----------------------------------------------------
+
+      console.log(
+        "=== CLEARING CART ==="
+      );
+
+      try {
+        if (
+          typeof clearCart ===
+          "function"
+        ) {
+          clearCart();
+        }
+
+        console.log(
+          "=== CART CLEARED ==="
+        );
+      } catch (cartError) {
+        console.warn(
+          "CLEAR CART WARNING:",
+          cartError
+        );
+      }
+
+      // -----------------------------------------------------
+      // SUCCESS
+      // -----------------------------------------------------
+
+      console.log(
+        "========================================"
+      );
+
+      console.log(
+        "=== CHECKOUT SUCCESS ==="
+      );
+
+      console.log(
+        "ORDER:",
+        createdOrder
+      );
+
+      console.log(
+        "========================================"
+      );
+
+      setOrderSuccess({
+        id: createdOrder.id,
+
+        orderNumber:
+          createdOrder.order_number,
+
+        paymentMethod,
+
+        total,
       });
-
-    if (orderError) {
-      console.error("ORDER ERROR:", orderError);
-
-      setLoading(false);
-
-      return setError(
-        `Gagal membuat pesanan: ${orderError.message}`
+    } catch (err) {
+      console.error(
+        "========================================"
       );
-    }
 
-    // CREATE ORDER ITEMS
-    const rows = items.map((item) => ({
-  order_id: orderId,
-  product_id: item.productId,
-  product_name: item.name,
-  price: item.price,
-  quantity: item.quantity,
-}));
-
-const { error: itemError } = await supabase
-  .from("order_items")
-  .insert(rows);
-
-    if (itemError) {
-      console.error("ORDER ITEM ERROR:", itemError);
-
-      setLoading(false);
-
-      return setError(
-        `Pesanan berhasil dibuat, tetapi item pesanan gagal disimpan: ${itemError.message}`
+      console.error(
+        "=== CHECKOUT ERROR ==="
       );
+
+      console.error(
+        err
+      );
+
+      console.error(
+        "MESSAGE:",
+        err?.message
+      );
+
+      console.error(
+        "CODE:",
+        err?.code
+      );
+
+      console.error(
+        "DETAILS:",
+        err?.details
+      );
+
+      console.error(
+        "HINT:",
+        err?.hint
+      );
+
+      console.error(
+        "========================================"
+      );
+
+      let message =
+        err?.message ||
+        "Terjadi kesalahan saat membuat pesanan.";
+
+      // -----------------------------------------------------
+      // ERROR RLS
+      // -----------------------------------------------------
+
+      if (
+        err?.code === "42501"
+      ) {
+        message =
+          "Checkout ditolak oleh Row Level Security (RLS) Supabase. Periksa policy INSERT pada tabel orders, order_items, dan order_tracking.";
+      }
+
+      // -----------------------------------------------------
+      // ERROR KOLOM
+      // -----------------------------------------------------
+
+      if (
+        err?.code === "PGRST204"
+      ) {
+        message =
+          "Ada kolom database yang belum tersedia. Periksa payment_method, selected_size, selected_color, atau kolom lainnya.";
+      }
+
+      // -----------------------------------------------------
+      // ERROR GENERATED COLUMN
+      // -----------------------------------------------------
+
+      if (
+        err?.code === "428C9"
+      ) {
+        message =
+          'Database menolak pengisian kolom generated. Pastikan kolom "subtotal" pada order_items tidak dikirim dari Checkout.';
+      }
+
+      // -----------------------------------------------------
+      // ERROR FOREIGN KEY
+      // -----------------------------------------------------
+
+      if (
+        err?.code === "23503"
+      ) {
+        message =
+          "Data produk atau order tidak sesuai dengan relasi database.";
+      }
+
+      // -----------------------------------------------------
+      // ERROR CHECK CONSTRAINT
+      // -----------------------------------------------------
+
+      if (
+        err?.code === "23514"
+      ) {
+        message =
+          "Status atau payment status tidak sesuai dengan aturan database.";
+      }
+
+      // -----------------------------------------------------
+      // DUPLICATE
+      // -----------------------------------------------------
+
+      if (
+        err?.code === "23505"
+      ) {
+        message =
+          "Nomor pesanan sudah digunakan. Silakan coba checkout kembali.";
+      }
+
+      setError(message);
+    } finally {
+      setLoading(false);
     }
+  };
 
-    const lines = items
-      .map(
-        (item, i) =>
-          `${i + 1}. ${item.name} | Size ${item.size} | Qty ${
-            item.quantity
-          } | ${formatRupiah(item.price * item.quantity)}`
-      )
-      .join("\n");
+  // =========================================================
+  // SUCCESS PAGE
+  // =========================================================
 
-    const text = [
-      "Halo WS FASHION",
-      "",
-      "Saya ingin melakukan pemesanan:",
-      "",
-      lines,
-      "",
-      `Total: ${formatRupiah(total)}`,
-      "",
-      `Nama: ${form.name}`,
-      `No. HP: ${form.phone}`,
-      `Alamat: ${form.address}`,
-      "",
-      `Order ID: ${orderId}`,
-      `Order Number: ${orderNumber}`,
-    ].join("\n");
-
-    clearCart();
-    setDone(true);
-    setLoading(false);
-
-    window.open(
-      `https://wa.me/${waNumber}?text=${encodeURIComponent(text)}`,
-      "_blank",
-      "noopener,noreferrer"
-    );
-  }
-
-  if (done) {
+  if (orderSuccess) {
     return (
-      <main className="page">
-        <div className="container success-page">
-          <CheckCircle2 size={52} />
-          <p className="eyebrow">ORDER CREATED</p>
-          <h1>Pesanan berhasil dibuat.</h1>
-          <p>
-            Ringkasan pesanan sudah disiapkan dan WhatsApp dibuka untuk
-            melanjutkan konfirmasi.
+      <main className="checkout-page">
+        <div className="checkout-success">
+
+          <div className="success-icon">
+            <CheckCircle2 size={48} />
+          </div>
+
+          <p className="eyebrow">
+            ORDER BERHASIL
           </p>
-          <Link to="/products" className="button dark">
-            Kembali Belanja
-          </Link>
+
+          <h1>
+            Pesanan berhasil dibuat.
+          </h1>
+
+          <p className="success-description">
+            Terima kasih sudah berbelanja
+            di WS Fashion.
+          </p>
+
+          <div className="success-order-card">
+
+            <div>
+              <span>
+                Nomor Pesanan
+              </span>
+
+              <strong>
+                {orderSuccess.orderNumber}
+              </strong>
+            </div>
+
+            <div>
+              <span>
+                Total
+              </span>
+
+              <strong>
+                {formatRupiah(
+                  orderSuccess.total
+                )}
+              </strong>
+            </div>
+
+            <div>
+              <span>
+                Pembayaran
+              </span>
+
+              <strong>
+                {orderSuccess.paymentMethod ===
+                  "bank_transfer" &&
+                  "Transfer Bank"}
+
+                {orderSuccess.paymentMethod ===
+                  "qris" &&
+                  "QRIS"}
+
+                {orderSuccess.paymentMethod ===
+                  "cod" &&
+                  "COD"}
+              </strong>
+            </div>
+
+          </div>
+
+          {orderSuccess.paymentMethod !==
+            "cod" && (
+            <div className="payment-instruction">
+
+              <h3>
+                Langkah selanjutnya
+              </h3>
+
+              <p>
+                Silakan lakukan pembayaran
+                sesuai metode yang dipilih.
+                Setelah itu, upload bukti
+                pembayaran pada halaman
+                detail pesanan.
+              </p>
+
+            </div>
+          )}
+
+          <div className="success-actions">
+
+            <button
+              type="button"
+              className="btn-primary"
+              onClick={() =>
+                navigate(
+                  `/orders/${orderSuccess.id}`
+                )
+              }
+            >
+              <Package size={18} />
+
+              Lihat Pesanan
+            </button>
+
+            <Link
+              to="/products"
+              className="btn-secondary"
+            >
+              Lanjut Belanja
+            </Link>
+
+          </div>
+
         </div>
       </main>
     );
   }
 
-  return (
-    <main className="page">
-      <div className="container checkout-page">
-        <Link to="/cart" className="back-link">
-          <ArrowLeft size={17} />
-          Kembali ke keranjang
-        </Link>
+  // =========================================================
+  // EMPTY CART
+  // =========================================================
 
-        <div className="checkout-grid">
-          <form className="checkout-form" onSubmit={submit}>
-            <p className="eyebrow">CHECKOUT / 07</p>
-            <h1>Complete Your Order.</h1>
+  if (!cartItems.length) {
+    return (
+      <main className="checkout-page">
 
-            <label>
-              Nama lengkap
-              <input
-                value={form.name}
-                onChange={(e) =>
-                  setForm({
-                    ...form,
-                    name: e.target.value,
-                  })
-                }
-              />
-            </label>
+        <div className="checkout-empty">
 
-            <label>
-              Nomor WhatsApp
-              <input
-                value={form.phone}
-                onChange={(e) =>
-                  setForm({
-                    ...form,
-                    phone: e.target.value,
-                  })
-                }
-                placeholder="08xxxxxxxxxx"
-              />
-            </label>
+          <ShoppingBag size={52} />
 
-            <label>
-              Alamat lengkap
-              <textarea
-                rows="5"
-                value={form.address}
-                onChange={(e) =>
-                  setForm({
-                    ...form,
-                    address: e.target.value,
-                  })
-                }
-              />
-            </label>
+          <h1>
+            Keranjang kosong
+          </h1>
 
-            {error && <div className="error-box">{error}</div>}
+          <p>
+            Tambahkan produk terlebih
+            dahulu sebelum melakukan
+            checkout.
+          </p>
 
-            <button
-              className="button dark wide"
-              disabled={loading}
-              type="submit"
-            >
-              <MessageCircle size={18} />
-              {loading ? "Memproses..." : "Pesan via WhatsApp"}
-            </button>
-          </form>
+          <Link
+            to="/products"
+            className="btn-primary"
+          >
+            Belanja Sekarang
+          </Link>
 
-          <aside className="summary">
-            <p className="eyebrow">YOUR ORDER</p>
-
-            {items.map((item) => (
-              <div className="mini-line" key={item.key}>
-                <span>
-                  {item.name} × {item.quantity} ({item.size})
-                </span>
-                <strong>
-                  {formatRupiah(item.price * item.quantity)}
-                </strong>
-              </div>
-            ))}
-
-            <hr />
-
-            <div className="summary-total">
-              <span>Total</span>
-              <strong>{formatRupiah(total)}</strong>
-            </div>
-          </aside>
         </div>
+
+      </main>
+    );
+  }
+
+  // =========================================================
+  // CHECKOUT PAGE
+  // =========================================================
+
+  return (
+    <main className="checkout-page">
+
+      <div className="checkout-container">
+
+        {/* HEADER */}
+
+        <div className="checkout-header">
+
+          <Link
+            to="/cart"
+            className="back-link"
+          >
+            <ArrowLeft size={18} />
+
+            Kembali ke Keranjang
+          </Link>
+
+          <div>
+
+            <p className="eyebrow">
+              WS FASHION
+            </p>
+
+            <h1>
+              Checkout
+            </h1>
+
+          </div>
+
+        </div>
+
+        {/* ERROR */}
+
+        {error && (
+          <div className="checkout-error">
+
+            <strong>
+              Checkout gagal
+            </strong>
+
+            <span>
+              {error}
+            </span>
+
+          </div>
+        )}
+
+        <form
+          className="checkout-layout"
+          onSubmit={handleCheckout}
+        >
+
+          {/* =================================================
+              LEFT
+          ================================================= */}
+
+          <div className="checkout-main">
+
+            {/* ALAMAT */}
+
+            <section className="checkout-section">
+
+              <div className="section-heading">
+
+                <div className="section-icon">
+                  <MapPin size={20} />
+                </div>
+
+                <div>
+
+                  <h2>
+                    Alamat Pengiriman
+                  </h2>
+
+                  <p>
+                    Masukkan data penerima
+                    pesanan.
+                  </p>
+
+                </div>
+
+              </div>
+
+              <div className="form-grid">
+
+                <div className="form-group">
+
+                  <label htmlFor="name">
+                    Nama Penerima
+                  </label>
+
+                  <input
+                    id="name"
+                    name="name"
+                    type="text"
+                    value={form.name}
+                    onChange={handleChange}
+                    placeholder="Nama lengkap"
+                    autoComplete="name"
+                  />
+
+                </div>
+
+                <div className="form-group">
+
+                  <label htmlFor="phone">
+                    Nomor WhatsApp
+                  </label>
+
+                  <input
+                    id="phone"
+                    name="phone"
+                    type="tel"
+                    value={form.phone}
+                    onChange={handleChange}
+                    placeholder="08xxxxxxxxxx"
+                    autoComplete="tel"
+                  />
+
+                </div>
+
+              </div>
+
+              <div className="form-group">
+
+                <label htmlFor="address">
+                  Alamat Lengkap
+                </label>
+
+                <textarea
+                  id="address"
+                  name="address"
+                  value={form.address}
+                  onChange={handleChange}
+                  placeholder="Jalan, nomor rumah, desa/kelurahan, kecamatan, kota/kabupaten, provinsi, kode pos"
+                  rows={5}
+                  autoComplete="street-address"
+                />
+
+              </div>
+
+              <div className="form-group">
+
+                <label htmlFor="notes">
+
+                  Catatan Pesanan
+
+                  <span>
+                    {" "}
+                    (opsional)
+                  </span>
+
+                </label>
+
+                <textarea
+                  id="notes"
+                  name="notes"
+                  value={form.notes}
+                  onChange={handleChange}
+                  placeholder="Contoh: Tolong kirim sore hari."
+                  rows={3}
+                />
+
+              </div>
+
+            </section>
+
+            {/* PEMBAYARAN */}
+
+            <section className="checkout-section">
+
+              <div className="section-heading">
+
+                <div className="section-icon">
+                  <CreditCard size={20} />
+                </div>
+
+                <div>
+
+                  <h2>
+                    Metode Pembayaran
+                  </h2>
+
+                  <p>
+                    Pilih metode pembayaran
+                    yang kamu inginkan.
+                  </p>
+
+                </div>
+
+              </div>
+
+              <div className="payment-options">
+
+                {paymentOptions.map(
+                  (option) => {
+
+                    const Icon =
+                      option.icon;
+
+                    const selected =
+                      paymentMethod ===
+                      option.id;
+
+                    return (
+                      <button
+                        key={option.id}
+                        type="button"
+                        className={`payment-option ${
+                          selected
+                            ? "selected"
+                            : ""
+                        }`}
+                        onClick={() => {
+
+                          console.log(
+                            "PAYMENT SELECTED:",
+                            option.id
+                          );
+
+                          setPaymentMethod(
+                            option.id
+                          );
+
+                          setError("");
+                        }}
+                      >
+
+                        <div className="payment-option-icon">
+                          <Icon size={22} />
+                        </div>
+
+                        <div className="payment-option-content">
+
+                          <strong>
+                            {option.title}
+                          </strong>
+
+                          <span>
+                            {option.description}
+                          </span>
+
+                        </div>
+
+                        <div className="payment-radio">
+
+                          {selected && (
+                            <CheckCircle2
+                              size={20}
+                            />
+                          )}
+
+                        </div>
+
+                      </button>
+                    );
+                  }
+                )}
+
+              </div>
+
+              {/* TRANSFER BANK */}
+
+              {paymentMethod ===
+                "bank_transfer" && (
+                <div className="payment-info">
+
+                  <strong>
+                    Transfer Bank
+                  </strong>
+
+                  <p>
+                    Setelah pesanan dibuat,
+                    lakukan transfer ke
+                    rekening WS Fashion.
+                  </p>
+
+                  <div className="bank-info">
+
+                    <span>
+                      Bank BCA
+                    </span>
+
+                    <strong>
+                      1234567890
+                    </strong>
+
+                    <small>
+                      a.n. WS Fashion
+                    </small>
+
+                  </div>
+
+                  <p className="small-text">
+                    Nomor rekening di atas
+                    adalah contoh. Ganti
+                    dengan rekening toko
+                    kamu.
+                  </p>
+
+                </div>
+              )}
+
+              {/* QRIS */}
+
+              {paymentMethod ===
+                "qris" && (
+                <div className="payment-info">
+
+                  <strong>
+                    Pembayaran QRIS
+                  </strong>
+
+                  <p>
+                    Setelah pesanan dibuat,
+                    buka detail pesanan
+                    kemudian upload bukti
+                    pembayaran QRIS.
+                  </p>
+
+                  <div className="qris-placeholder">
+                    QRIS WS FASHION
+                  </div>
+
+                  <p className="small-text">
+                    Ganti area ini dengan
+                    gambar QRIS toko kamu.
+                  </p>
+
+                </div>
+              )}
+
+              {/* COD */}
+
+              {paymentMethod ===
+                "cod" && (
+                <div className="payment-info">
+
+                  <strong>
+                    Cash on Delivery
+                  </strong>
+
+                  <p>
+                    Pembayaran dilakukan
+                    ketika pesanan sampai
+                    di alamat kamu.
+                  </p>
+
+                </div>
+              )}
+
+            </section>
+
+            {/* PENGIRIMAN */}
+
+            <section className="checkout-section">
+
+              <div className="section-heading">
+
+                <div className="section-icon">
+                  <Truck size={20} />
+                </div>
+
+                <div>
+
+                  <h2>
+                    Pengiriman
+                  </h2>
+
+                  <p>
+                    Informasi pengiriman
+                    pesanan.
+                  </p>
+
+                </div>
+
+              </div>
+
+              <div className="shipping-method">
+
+                <div className="shipping-icon">
+                  <Truck size={24} />
+                </div>
+
+                <div>
+
+                  <strong>
+                    Pengiriman Standar
+                  </strong>
+
+                  <span>
+                    Ongkir sementara
+                    gratis.
+                  </span>
+
+                </div>
+
+                <strong>
+                  Gratis
+                </strong>
+
+              </div>
+
+            </section>
+
+          </div>
+
+          {/* =================================================
+              SUMMARY
+          ================================================= */}
+
+          <aside className="checkout-sidebar">
+
+            <section className="order-summary">
+
+              <div className="summary-header">
+
+                <h2>
+                  Ringkasan Pesanan
+                </h2>
+
+                <span>
+                  {cartItems.length} item
+                </span>
+
+              </div>
+
+              <div className="summary-products">
+
+                {cartItems.map(
+                  (item, index) => {
+
+                    const product =
+                      item.product ||
+                      item;
+
+                    const price =
+                      Number(
+                        item.price ??
+                          product.price ??
+                          0
+                      );
+
+                    const quantity =
+                      Number(
+                        item.quantity ??
+                          item.qty ??
+                          1
+                      );
+
+                    const image =
+                      product.image_url;
+
+                    return (
+                      <div
+                        className="summary-product"
+                        key={
+                          item.key ??
+                          item.id ??
+                          product.id ??
+                          index
+                        }
+                      >
+
+                        <div className="summary-product-image">
+
+                          {image ? (
+                            <img
+                              src={image}
+                              alt={
+                                product.name ||
+                                "Produk"
+                              }
+                            />
+                          ) : (
+                            <span>
+                              WS
+                            </span>
+                          )}
+
+                        </div>
+
+                        <div className="summary-product-info">
+
+                          <strong>
+                            {product.name ||
+                              "Produk"}
+                          </strong>
+
+                          {(item.selected_size ||
+                            item.size) && (
+                            <span>
+                              Size:{" "}
+                              {item.selected_size ??
+                                item.size}
+                            </span>
+                          )}
+
+                          {(item.selected_color ||
+                            item.color) && (
+                            <span>
+                              Warna:{" "}
+                              {item.selected_color ??
+                                item.color}
+                            </span>
+                          )}
+
+                          <span>
+                            {quantity} ×{" "}
+                            {formatRupiah(
+                              price
+                            )}
+                          </span>
+
+                        </div>
+
+                        <strong>
+                          {formatRupiah(
+                            price *
+                              quantity
+                          )}
+                        </strong>
+
+                      </div>
+                    );
+                  }
+                )}
+
+              </div>
+
+              <div className="summary-divider" />
+
+              <div className="summary-row">
+
+                <span>
+                  Subtotal
+                </span>
+
+                <strong>
+                  {formatRupiah(
+                    subtotal
+                  )}
+                </strong>
+
+              </div>
+
+              <div className="summary-row">
+
+                <span>
+                  Ongkir
+                </span>
+
+                <strong>
+                  Gratis
+                </strong>
+
+              </div>
+
+              <div className="summary-divider" />
+
+              <div className="summary-total">
+
+                <span>
+                  Total
+                </span>
+
+                <strong>
+                  {formatRupiah(
+                    total
+                  )}
+                </strong>
+
+              </div>
+
+              <button
+                type="submit"
+                className="checkout-submit"
+                disabled={loading}
+                onClick={() => {
+                  console.log(
+                    "=== BUTTON BUAT PESANAN DIKLIK ==="
+                  );
+                }}
+              >
+
+                {loading ? (
+                  "Memproses Pesanan..."
+                ) : (
+                  <>
+                    <ShoppingBag
+                      size={19}
+                    />
+
+                    Buat Pesanan
+                  </>
+                )}
+
+              </button>
+
+              <p className="checkout-security">
+
+                Pesanan akan tersimpan di
+                akun kamu dan dapat dilacak
+                melalui halaman Pesanan Saya.
+
+              </p>
+
+            </section>
+
+          </aside>
+
+        </form>
+
       </div>
+
     </main>
   );
-}
-
-function NavigateToCart() {
-  const navigate = useNavigate();
-
-  navigate("/cart", {
-    replace: true,
-  });
-
-  return null;
 }

@@ -8,14 +8,29 @@ import React, {
 
 const CartContext = createContext(null);
 
+const CART_STORAGE_KEY = "ws-fashion-cart";
+
 export function CartProvider({ children }) {
   const [items, setItems] = useState(() => {
     try {
-      const savedItems = JSON.parse(localStorage.getItem("ws-fashion-cart") || "[]");
-      return savedItems.map((item) => ({
+      const saved = localStorage.getItem(CART_STORAGE_KEY);
+
+      if (!saved) {
+        return [];
+      }
+
+      const parsed = JSON.parse(saved);
+
+      if (!Array.isArray(parsed)) {
+        return [];
+      }
+
+      return parsed.map((item) => ({
         ...item,
-        key: item.key || `${item.id}-${item.size || "default"}`,
-        quantity: Number(item.quantity) || 1,
+        key:
+          item.key ||
+          `${item.id}-${item.size || "default"}-${item.color || "default"}`,
+        quantity: Math.max(1, Number(item.quantity) || 1),
       }));
     } catch (error) {
       console.error("Gagal membaca keranjang:", error);
@@ -24,46 +39,59 @@ export function CartProvider({ children }) {
   });
 
   useEffect(() => {
-    localStorage.setItem(
-      "ws-fashion-cart",
-      JSON.stringify(items)
-    );
+    try {
+      localStorage.setItem(
+        CART_STORAGE_KEY,
+        JSON.stringify(items)
+      );
+    } catch (error) {
+      console.error("Gagal menyimpan keranjang:", error);
+    }
   }, [items]);
 
-  function addToCart(product, size, quantity = 1) {
-    const itemKey = `${product.id}-${size || "default"}`;
+  function addToCart(product, size = "", quantity = 1, color = "") {
+    if (!product?.id) {
+      console.error("Produk tidak valid:", product);
+      return;
+    }
 
-    setItems((current) => {
-      const existing = current.find(
+    const qty = Math.max(1, Number(quantity) || 1);
+
+    const itemKey = `${product.id}-${size || "default"}-${color || "default"}`;
+
+    setItems((currentItems) => {
+      const existing = currentItems.find(
         (item) => item.key === itemKey
       );
 
       if (existing) {
-        return current.map((item) =>
+        return currentItems.map((item) =>
           item.key === itemKey
             ? {
                 ...item,
-                quantity: Number(item.quantity) + Number(quantity),
+                quantity:
+                  Number(item.quantity || 0) + qty,
               }
             : item
         );
       }
 
       return [
-        ...current,
+        ...currentItems,
         {
           ...product,
           key: itemKey,
-          size,
-          quantity: Number(quantity),
+          size: size || "",
+          color: color || "",
+          quantity: qty,
         },
       ];
     });
   }
 
   function removeFromCart(key) {
-    setItems((current) =>
-      current.filter((item) => item.key !== key)
+    setItems((currentItems) =>
+      currentItems.filter((item) => item.key !== key)
     );
   }
 
@@ -75,8 +103,8 @@ export function CartProvider({ children }) {
       return;
     }
 
-    setItems((current) =>
-      current.map((item) =>
+    setItems((currentItems) =>
+      currentItems.map((item) =>
         item.key === key
           ? {
               ...item,
@@ -89,36 +117,62 @@ export function CartProvider({ children }) {
 
   function clearCart() {
     setItems([]);
+
+    try {
+      localStorage.removeItem(CART_STORAGE_KEY);
+    } catch (error) {
+      console.error("Gagal menghapus keranjang:", error);
+    }
   }
 
   const total = useMemo(() => {
-    return items.reduce(
-      (sum, item) =>
-        sum +
-        Number(item.price || 0) *
-          Number(item.quantity || 0),
-      0
-    );
+    return items.reduce((sum, item) => {
+      const price = Number(item.price || 0);
+      const quantity = Number(item.quantity || 0);
+
+      return sum + price * quantity;
+    }, 0);
   }, [items]);
 
   const count = useMemo(() => {
-    return items.reduce(
-      (sum, item) =>
-        sum + Number(item.quantity || 0),
-      0
-    );
+    return items.reduce((sum, item) => {
+      return sum + Number(item.quantity || 0);
+    }, 0);
   }, [items]);
+
+  /*
+   * Alias untuk kompatibilitas dengan Checkout.jsx
+   *
+   * Checkout menggunakan:
+   * cartItems
+   * cartTotal
+   *
+   * Sedangkan halaman Cart menggunakan:
+   * items
+   * total
+   */
+  const cartItems = items;
+  const cartTotal = total;
 
   return (
     <CartContext.Provider
       value={{
+        // Data utama
         items,
+        total,
+
+        // Alias untuk Checkout
+        cartItems,
+        cartTotal,
+
+        // Jumlah produk
+        count,
+
+        // Fungsi keranjang
         addToCart,
         removeFromCart,
         updateQuantity,
         clearCart,
-        total,
-        count,
       }}
     >
       {children}
