@@ -2428,3 +2428,33 @@ h2 em {
     height: 15px;
   }
 }
+/* =========================================================
+   PRODUCT DELETE STOCK PROTECTION
+========================================================= */
+
+.table-action.danger {
+  color: #a22;
+}
+
+.table-action.danger:hover {
+  background: #a22;
+  color: #fff;
+  border-color: #a22;
+}
+
+.table-action.danger.disabled,
+.table-action.danger:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  color: #999;
+  background: #f5f5f2;
+  border-color: #d8d8d2;
+}
+
+.table-action.danger.disabled:hover,
+.table-action.danger:disabled:hover {
+  opacity: 0.35;
+  color: #999;
+  background: #f5f5f2;
+  border-color: #d8d8d2;
+}

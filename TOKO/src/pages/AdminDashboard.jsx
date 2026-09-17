@@ -53,6 +53,10 @@ const emptyCategory = {
   description: "",
 };
 
+// =========================================================
+// IMAGE CONFIG
+// =========================================================
+
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
 
 const ALLOWED_IMAGE_TYPES = [
@@ -158,6 +162,7 @@ export default function AdminDashboard() {
           error: categoriesError,
         },
       ] = await Promise.all([
+        // PRODUCTS
         supabase
           .from("products")
           .select(`
@@ -172,6 +177,7 @@ export default function AdminDashboard() {
             ascending: false,
           }),
 
+        // ORDERS
         supabase
           .from("orders")
           .select("*")
@@ -179,6 +185,7 @@ export default function AdminDashboard() {
             ascending: false,
           }),
 
+        // CATEGORIES
         supabase
           .from("categories")
           .select(
@@ -188,6 +195,10 @@ export default function AdminDashboard() {
             ascending: true,
           }),
       ]);
+
+      // =======================================================
+      // PRODUCT ERROR
+      // =======================================================
 
       if (productsError) {
         console.error(
@@ -200,6 +211,10 @@ export default function AdminDashboard() {
         );
       }
 
+      // =======================================================
+      // ORDER ERROR
+      // =======================================================
+
       if (ordersError) {
         console.error(
           "LOAD ORDERS ERROR:",
@@ -210,6 +225,10 @@ export default function AdminDashboard() {
           `Gagal memuat order: ${ordersError.message}`
         );
       }
+
+      // =======================================================
+      // CATEGORY ERROR
+      // =======================================================
 
       if (categoriesError) {
         console.error(
@@ -332,7 +351,7 @@ export default function AdminDashboard() {
   }
 
   // =========================================================
-  // CATEGORY CRUD
+  // CATEGORY EDIT
   // =========================================================
 
   function editCategory(category) {
@@ -359,6 +378,10 @@ export default function AdminDashboard() {
     });
   }
 
+  // =========================================================
+  // RESET CATEGORY
+  // =========================================================
+
   function resetCategoryForm() {
     setEditingCategory(null);
 
@@ -366,6 +389,10 @@ export default function AdminDashboard() {
       ...emptyCategory,
     });
   }
+
+  // =========================================================
+  // SAVE CATEGORY
+  // =========================================================
 
   async function saveCategory(event) {
     event.preventDefault();
@@ -465,6 +492,10 @@ export default function AdminDashboard() {
       setSavingCategory(false);
     }
   }
+
+  // =========================================================
+  // DELETE CATEGORY
+  // =========================================================
 
   async function deleteCategory(
     category
@@ -598,6 +629,10 @@ export default function AdminDashboard() {
     });
   }
 
+  // =========================================================
+  // RESET PRODUCT FORM
+  // =========================================================
+
   function resetForm() {
     setEditing(null);
 
@@ -609,7 +644,7 @@ export default function AdminDashboard() {
   }
 
   // =========================================================
-  // IMAGE
+  // IMAGE VALIDATION
   // =========================================================
 
   function validateImage(
@@ -640,6 +675,10 @@ export default function AdminDashboard() {
       );
     }
   }
+
+  // =========================================================
+  // FILE CHANGE
+  // =========================================================
 
   function handleFileChange(e) {
     const selectedFile =
@@ -674,6 +713,10 @@ export default function AdminDashboard() {
     }
   }
 
+  // =========================================================
+  // UPLOAD IMAGE
+  // =========================================================
+
   async function uploadImage() {
     if (!file) {
       return (
@@ -706,21 +749,22 @@ export default function AdminDashboard() {
 
     const {
       error: uploadError,
-    } = await supabase.storage
-      .from("product-images")
-      .upload(
-        path,
-        file,
-        {
-          cacheControl:
-            "3600",
+    } =
+      await supabase.storage
+        .from("product-images")
+        .upload(
+          path,
+          file,
+          {
+            cacheControl:
+              "3600",
 
-          upsert: false,
+            upsert: false,
 
-          contentType:
-            file.type,
-        }
-      );
+            contentType:
+              file.type,
+          }
+        );
 
     if (uploadError) {
       throw new Error(
@@ -745,7 +789,7 @@ export default function AdminDashboard() {
   }
 
   // =========================================================
-  // PRODUCT SAVE
+  // SAVE PRODUCT
   // =========================================================
 
   async function saveProduct(
@@ -876,7 +920,9 @@ export default function AdminDashboard() {
         result =
           await supabase
             .from("products")
-            .insert(payload);
+            .insert(
+              payload
+            );
       }
 
       if (result.error) {
@@ -912,55 +958,107 @@ export default function AdminDashboard() {
 
   // =========================================================
   // DELETE PRODUCT
+  // HANYA BOLEH JIKA STOK = 0
   // =========================================================
 
-  async function deleteProduct(
-    id
-  ) {
+  async function deleteProduct(id) {
     const product =
       products.find(
         (item) =>
           item.id === id
       );
 
-    if (
-      !window.confirm(
-        `Hapus produk "${product?.name || ""}"?`
-      )
-    ) {
+    // Produk tidak ditemukan
+    if (!product) {
+      setMessage(
+        "Produk tidak ditemukan."
+      );
+
+      return;
+    }
+
+    // =======================================================
+    // CEK STOK
+    // =======================================================
+
+    const stock =
+      Number(
+        product.stock || 0
+      );
+
+    // =======================================================
+    // STOK MASIH ADA
+    // =======================================================
+
+    if (stock > 0) {
+      setMessage(
+        `Produk "${product.name}" tidak dapat dihapus karena stok masih tersedia (${stock} pcs). Habiskan stok terlebih dahulu.`
+      );
+
+      return;
+    }
+
+    // =======================================================
+    // STOK SUDAH 0
+    // =======================================================
+
+    const confirmed =
+      window.confirm(
+        `Hapus produk "${product.name}"?\n\nStok produk sudah 0, sehingga produk dapat dihapus.`
+      );
+
+    if (!confirmed) {
       return;
     }
 
     setMessage("");
 
-    const { error } =
-      await supabase
-        .from("products")
-        .delete()
-        .eq("id", id);
+    try {
+      const { error } =
+        await supabase
+          .from("products")
+          .delete()
+          .eq("id", id);
 
-    if (error) {
+      if (error) {
+        console.error(
+          "DELETE PRODUCT ERROR:",
+          error
+        );
+
+        setMessage(
+          `Gagal menghapus produk: ${error.message}`
+        );
+
+        return;
+      }
+
+      // Jika sedang edit produk tersebut
+      if (editing === id) {
+        resetForm();
+      }
+
+      setMessage(
+        `Produk "${product.name}" berhasil dihapus.`
+      );
+
+      await load();
+    } catch (error) {
       console.error(
         "DELETE PRODUCT ERROR:",
         error
       );
 
       setMessage(
-        `Gagal menghapus produk: ${error.message}`
+        error instanceof Error
+          ? error.message
+          : "Gagal menghapus produk."
       );
-
-      return;
     }
-
-    setMessage(
-      "Produk berhasil dihapus."
-    );
-
-    await load();
   }
 
   // =========================================================
-  // ORDERS
+  // ORDER STATUS
   // =========================================================
 
   async function updateOrderStatus(
@@ -997,25 +1095,26 @@ export default function AdminDashboard() {
   // REVENUE
   // =========================================================
 
-  const revenue = useMemo(() => {
-    return orders
-      .filter(
-        (order) =>
-          order.status !==
-          "cancelled"
-      )
-      .reduce(
-        (
-          sum,
-          order
-        ) =>
-          sum +
-          Number(
-            order.total || 0
-          ),
-        0
-      );
-  }, [orders]);
+  const revenue =
+    useMemo(() => {
+      return orders
+        .filter(
+          (order) =>
+            order.status !==
+            "cancelled"
+        )
+        .reduce(
+          (
+            sum,
+            order
+          ) =>
+            sum +
+            Number(
+              order.total || 0
+            ),
+          0
+        );
+    }, [orders]);
 
   // =========================================================
   // FILTER REPORT
@@ -1041,6 +1140,7 @@ export default function AdminDashboard() {
             return false;
           }
 
+          // WEEKLY
           if (
             orderPeriod ===
             "weekly"
@@ -1068,6 +1168,7 @@ export default function AdminDashboard() {
             );
           }
 
+          // MONTHLY
           if (
             orderPeriod ===
             "monthly"
@@ -1080,6 +1181,7 @@ export default function AdminDashboard() {
             );
           }
 
+          // YEARLY
           if (
             orderPeriod ===
             "yearly"
@@ -1097,6 +1199,10 @@ export default function AdminDashboard() {
       orders,
       orderPeriod,
     ]);
+
+  // =========================================================
+  // FILTERED REVENUE
+  // =========================================================
 
   const filteredRevenue =
     useMemo(() => {
@@ -1118,6 +1224,10 @@ export default function AdminDashboard() {
           0
         );
     }, [filteredOrders]);
+
+  // =========================================================
+  // ORDER COUNTS
+  // =========================================================
 
   const completedOrders =
     filteredOrders.filter(
@@ -1267,20 +1377,27 @@ export default function AdminDashboard() {
             index
           ) => [
             index + 1,
+
             order.order_number ||
               "-",
+
             order.customer_name ||
               "-",
+
             order.customer_phone ||
               order.phone ||
               "-",
+
             formatDate(
               order.created_at
             ),
+
             order.status ||
               "-",
+
             order.payment_status ||
               "-",
+
             formatRupiah(
               order.total
             ),
@@ -1437,6 +1554,8 @@ export default function AdminDashboard() {
             "Admin"}
         </p>
 
+        {/* PRODUCTS */}
+
         <button
           type="button"
           className={
@@ -1454,6 +1573,8 @@ export default function AdminDashboard() {
           Products
         </button>
 
+        {/* CATEGORIES */}
+
         <button
           type="button"
           className={
@@ -1470,6 +1591,8 @@ export default function AdminDashboard() {
           <Tags size={18} />
           Categories
         </button>
+
+        {/* ORDERS */}
 
         <button
           type="button"
@@ -1490,6 +1613,8 @@ export default function AdminDashboard() {
           Orders
         </button>
 
+        {/* LOGOUT */}
+
         <button
           type="button"
           className="admin-nav logout"
@@ -1503,7 +1628,9 @@ export default function AdminDashboard() {
 
       </aside>
 
-      {/* OVERLAY */}
+      {/* =====================================================
+          OVERLAY
+      ====================================================== */}
 
       <div
         className={`admin-sidebar-overlay ${
@@ -1522,7 +1649,9 @@ export default function AdminDashboard() {
 
       <section className="admin-content">
 
-        {/* TOP */}
+        {/* ===================================================
+            TOP
+        ==================================================== */}
 
         <div className="admin-top">
 
@@ -1542,7 +1671,9 @@ export default function AdminDashboard() {
 
         </div>
 
-        {/* STATS */}
+        {/* ===================================================
+            STATS
+        ==================================================== */}
 
         <div className="stats-grid">
 
@@ -1597,9 +1728,12 @@ export default function AdminDashboard() {
         {tab === "products" && (
           <>
 
+            {/* PRODUCT HEADER */}
+
             <div className="admin-section-heading">
 
               <div>
+
                 <p className="eyebrow">
                   PRODUCT MANAGEMENT
                 </p>
@@ -1609,6 +1743,7 @@ export default function AdminDashboard() {
                     ? "Edit Product"
                     : "Add Product"}
                 </h2>
+
               </div>
 
               {editing && (
@@ -1626,12 +1761,16 @@ export default function AdminDashboard() {
 
             </div>
 
+            {/* PRODUCT FORM */}
+
             <form
               className="admin-form"
               onSubmit={
                 saveProduct
               }
             >
+
+              {/* NAME */}
 
               <label>
                 Nama Produk
@@ -1652,6 +1791,8 @@ export default function AdminDashboard() {
                 />
               </label>
 
+              {/* CATEGORY */}
+
               <label>
                 Kategori
 
@@ -1667,6 +1808,7 @@ export default function AdminDashboard() {
                   }
                   required
                 >
+
                   <option value="">
                     Pilih kategori
                   </option>
@@ -1687,8 +1829,12 @@ export default function AdminDashboard() {
                       </option>
                     )
                   )}
+
                 </select>
+
               </label>
+
+              {/* PRICE */}
 
               <label>
                 Harga
@@ -1710,6 +1856,8 @@ export default function AdminDashboard() {
                 />
               </label>
 
+              {/* COMPARE PRICE */}
+
               <label>
                 Harga Coret
 
@@ -1728,6 +1876,8 @@ export default function AdminDashboard() {
                   placeholder="159000"
                 />
               </label>
+
+              {/* STOCK */}
 
               <label>
                 Stok
@@ -1748,6 +1898,8 @@ export default function AdminDashboard() {
                 />
               </label>
 
+              {/* SKU */}
+
               <label>
                 SKU
 
@@ -1766,6 +1918,8 @@ export default function AdminDashboard() {
                 />
               </label>
 
+              {/* SIZE */}
+
               <label>
                 Ukuran
 
@@ -1782,6 +1936,8 @@ export default function AdminDashboard() {
                   placeholder="S,M,L,XL"
                 />
               </label>
+
+              {/* COLORS */}
 
               <label>
                 Warna
@@ -1800,6 +1956,8 @@ export default function AdminDashboard() {
                 />
               </label>
 
+              {/* DESCRIPTION */}
+
               <label className="full">
                 Deskripsi
 
@@ -1816,7 +1974,10 @@ export default function AdminDashboard() {
                   }
                   placeholder="Deskripsi produk..."
                 />
+
               </label>
+
+              {/* IMAGE URL */}
 
               <label className="full">
                 URL Gambar
@@ -1834,7 +1995,10 @@ export default function AdminDashboard() {
                   }
                   placeholder="https://..."
                 />
+
               </label>
+
+              {/* FILE */}
 
               <label className="file-input full">
 
@@ -1856,6 +2020,8 @@ export default function AdminDashboard() {
 
               </label>
 
+              {/* ACTIVE */}
+
               <label className="check full">
 
                 <input
@@ -1874,6 +2040,8 @@ export default function AdminDashboard() {
                 Produk aktif
 
               </label>
+
+              {/* FEATURED */}
 
               <label className="check full">
 
@@ -1894,6 +2062,8 @@ export default function AdminDashboard() {
 
               </label>
 
+              {/* MESSAGE */}
+
               {message && (
                 <div
                   className="message full"
@@ -1903,6 +2073,8 @@ export default function AdminDashboard() {
                 </div>
               )}
 
+              {/* SUBMIT */}
+
               <button
                 type="submit"
                 className="button dark"
@@ -1910,12 +2082,14 @@ export default function AdminDashboard() {
                   saving
                 }
               >
+
                 {saving ? (
                   <>
                     <RefreshCw
                       size={17}
                       className="admin-spin"
                     />
+
                     Menyimpan...
                   </>
                 ) : editing ? (
@@ -1923,6 +2097,7 @@ export default function AdminDashboard() {
                     <Pencil
                       size={17}
                     />
+
                     Update Product
                   </>
                 ) : (
@@ -1930,18 +2105,23 @@ export default function AdminDashboard() {
                     <Plus
                       size={17}
                     />
+
                     Add Product
                   </>
                 )}
+
               </button>
 
             </form>
 
-            {/* PRODUCT LIST */}
+            {/* =================================================
+                PRODUCT LIST
+            ================================================== */}
 
             <div className="admin-section-heading">
 
               <div>
+
                 <p className="eyebrow">
                   INVENTORY
                 </p>
@@ -1949,6 +2129,7 @@ export default function AdminDashboard() {
                 <h2>
                   Product List
                 </h2>
+
               </div>
 
               <button
@@ -1961,6 +2142,7 @@ export default function AdminDashboard() {
                   loading
                 }
                 aria-label="Refresh produk"
+                title="Refresh produk"
               >
                 <RefreshCw
                   className={
@@ -1978,7 +2160,9 @@ export default function AdminDashboard() {
               <table className="admin-table">
 
                 <thead>
+
                   <tr>
+
                     <th>
                       Produk
                     </th>
@@ -2006,115 +2190,171 @@ export default function AdminDashboard() {
                     <th>
                       Aksi
                     </th>
+
                   </tr>
+
                 </thead>
 
                 <tbody>
 
                   {products.map(
-                    (product) => (
-                      <tr
-                        key={
-                          product.id
-                        }
-                      >
+                    (product) => {
 
-                        <td>
-                          <div className="table-product">
+                      const productStock =
+                        Number(
+                          product.stock ||
+                            0
+                        );
 
-                            {product.image_url ? (
-                              <img
-                                src={
-                                  product.image_url
-                                }
-                                alt={
+                      const canDelete =
+                        productStock ===
+                        0;
+
+                      return (
+                        <tr
+                          key={
+                            product.id
+                          }
+                        >
+
+                          {/* PRODUCT */}
+
+                          <td>
+
+                            <div className="table-product">
+
+                              {product.image_url ? (
+                                <img
+                                  src={
+                                    product.image_url
+                                  }
+                                  alt={
+                                    product.name
+                                  }
+                                />
+                              ) : (
+                                <span>
+                                  WS
+                                </span>
+                              )}
+
+                              <b>
+                                {
                                   product.name
                                 }
-                              />
-                            ) : (
-                              <span>
-                                WS
-                              </span>
+                              </b>
+
+                            </div>
+
+                          </td>
+
+                          {/* CATEGORY */}
+
+                          <td>
+                            {
+                              product
+                                .categories
+                                ?.name ||
+                              "—"
+                            }
+                          </td>
+
+                          {/* PRICE */}
+
+                          <td>
+                            {formatRupiah(
+                              product.price
                             )}
+                          </td>
 
-                            <b>
+                          {/* STOCK */}
+
+                          <td>
+
+                            <strong>
                               {
-                                product.name
+                                productStock
                               }
-                            </b>
+                            </strong>
 
-                          </div>
-                        </td>
+                          </td>
 
-                        <td>
-                          {
-                            product
-                              .categories
-                              ?.name ||
-                            "—"
-                          }
-                        </td>
+                          {/* STATUS */}
 
-                        <td>
-                          {formatRupiah(
-                            product.price
-                          )}
-                        </td>
+                          <td>
+                            {product.is_active
+                              ? "Active"
+                              : "Inactive"}
+                          </td>
 
-                        <td>
-                          {
-                            product.stock
-                          }
-                        </td>
+                          {/* FEATURED */}
 
-                        <td>
-                          {product.is_active
-                            ? "Active"
-                            : "Inactive"}
-                        </td>
+                          <td>
+                            {product.is_featured
+                              ? "Yes"
+                              : "-"}
+                          </td>
 
-                        <td>
-                          {product.is_featured
-                            ? "Yes"
-                            : "-"}
-                        </td>
+                          {/* ACTION */}
 
-                        <td>
+                          <td>
 
-                          <button
-                            type="button"
-                            className="table-action"
-                            onClick={() =>
-                              editProduct(
-                                product
-                              )
-                            }
-                            aria-label="Edit produk"
-                          >
-                            <Pencil
-                              size={16}
-                            />
-                          </button>
+                            {/* EDIT */}
 
-                          <button
-                            type="button"
-                            className="table-action danger"
-                            onClick={() =>
-                              deleteProduct(
-                                product.id
-                              )
-                            }
-                            aria-label="Hapus produk"
-                          >
-                            <Trash2
-                              size={16}
-                            />
-                          </button>
+                            <button
+                              type="button"
+                              className="table-action"
+                              onClick={() =>
+                                editProduct(
+                                  product
+                                )
+                              }
+                              aria-label="Edit produk"
+                              title="Edit produk"
+                            >
+                              <Pencil
+                                size={16}
+                              />
+                            </button>
 
-                        </td>
+                            {/* DELETE */}
 
-                      </tr>
-                    )
+                            <button
+                              type="button"
+                              className={
+                                canDelete
+                                  ? "table-action danger"
+                                  : "table-action danger disabled"
+                              }
+                              onClick={() =>
+                                deleteProduct(
+                                  product.id
+                                )
+                              }
+                              aria-label={
+                                canDelete
+                                  ? "Hapus produk"
+                                  : "Produk tidak dapat dihapus karena stok masih ada"
+                              }
+                              title={
+                                canDelete
+                                  ? "Hapus produk"
+                                  : `Tidak dapat dihapus — stok masih ${productStock} pcs`
+                              }
+                              disabled={
+                                !canDelete
+                              }
+                            >
+                              <Trash2
+                                size={16}
+                              />
+                            </button>
+
+                          </td>
+
+                        </tr>
+                      );
+                    }
                   )}
 
                 </tbody>
@@ -2138,6 +2378,8 @@ export default function AdminDashboard() {
 
         {tab === "categories" && (
           <>
+
+            {/* CATEGORY HEADER */}
 
             <div className="admin-section-heading">
 
@@ -2196,6 +2438,7 @@ export default function AdminDashboard() {
                   placeholder="Contoh: Hoodie"
                   required
                 />
+
               </label>
 
               <label>
@@ -2218,6 +2461,7 @@ export default function AdminDashboard() {
                 <small>
                   Kosongkan untuk membuat slug otomatis.
                 </small>
+
               </label>
 
               <label className="full">
@@ -2236,6 +2480,7 @@ export default function AdminDashboard() {
                   }
                   placeholder="Deskripsi kategori..."
                 />
+
               </label>
 
               {message && (
@@ -2328,11 +2573,17 @@ export default function AdminDashboard() {
                       }
                     >
 
+                      {/* CATEGORY ICON */}
+
                       <div className="category-card-icon">
+
                         <FolderOpen
                           size={24}
                         />
+
                       </div>
+
+                      {/* CONTENT */}
 
                       <div className="category-card-content">
 
@@ -2360,7 +2611,11 @@ export default function AdminDashboard() {
 
                       </div>
 
+                      {/* ACTIONS */}
+
                       <div className="category-card-actions">
+
+                        {/* EDIT */}
 
                         <button
                           type="button"
@@ -2371,11 +2626,14 @@ export default function AdminDashboard() {
                             )
                           }
                           aria-label="Edit kategori"
+                          title="Edit kategori"
                         >
                           <Pencil
                             size={16}
                           />
                         </button>
+
+                        {/* DELETE */}
 
                         <button
                           type="button"
@@ -2386,6 +2644,7 @@ export default function AdminDashboard() {
                             )
                           }
                           aria-label="Hapus kategori"
+                          title="Hapus kategori"
                         >
                           <Trash2
                             size={16}
@@ -2416,6 +2675,8 @@ export default function AdminDashboard() {
 
         {tab === "orders" && (
           <div className="admin-section">
+
+            {/* ORDER HEADER */}
 
             <div className="admin-section-heading">
 
@@ -2553,6 +2814,7 @@ export default function AdminDashboard() {
             <div className="order-report-stats">
 
               <div className="order-report-card">
+
                 <span>
                   Total Pesanan
                 </span>
@@ -2562,9 +2824,11 @@ export default function AdminDashboard() {
                     filteredOrders.length
                   }
                 </strong>
+
               </div>
 
               <div className="order-report-card">
+
                 <span>
                   Selesai
                 </span>
@@ -2574,9 +2838,11 @@ export default function AdminDashboard() {
                     completedOrders
                   }
                 </strong>
+
               </div>
 
               <div className="order-report-card">
+
                 <span>
                   Pending
                 </span>
@@ -2586,9 +2852,11 @@ export default function AdminDashboard() {
                     pendingOrders
                   }
                 </strong>
+
               </div>
 
               <div className="order-report-card">
+
                 <span>
                   Omzet
                 </span>
@@ -2598,6 +2866,7 @@ export default function AdminDashboard() {
                     filteredRevenue
                   )}
                 </strong>
+
               </div>
 
             </div>
@@ -2651,12 +2920,14 @@ export default function AdminDashboard() {
                       >
 
                         <td>
+
                           <b>
                             {
                               order.order_number ||
                               "—"
                             }
                           </b>
+
                         </td>
 
                         <td>
