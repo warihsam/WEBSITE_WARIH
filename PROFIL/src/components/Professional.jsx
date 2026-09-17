@@ -1,40 +1,98 @@
-import { BriefcaseBusiness, Code2, Database, Palette, BarChart3 } from "lucide-react";
+
+import {
+  BriefcaseBusiness,
+  Code2,
+  Database,
+  Palette,
+  BarChart3,
+  GraduationCap,
+  Building2,
+} from "lucide-react";
+
 import "./Professional.css";
 
 const profileData = [
-  { icon: BriefcaseBusiness, label: "STATUS", value: "Siswa Kelas XII RPL" },
-  { icon: Code2, label: "PEMROGRAMAN", value: "Software Development" },
-  { icon: GlobeIcon, label: "WEB", value: "React + Vite" },
-  { icon: Database, label: "DATABASE", value: "Supabase" },
-  { icon: Palette, label: "VISUAL", value: "UI/UX · Gambar · GIF" },
-  { icon: BarChart3, label: "FOKUS", value: "Data · Dashboard · Industri" },
+  {
+    icon: GraduationCap,
+    label: "PENDIDIKAN",
+    value: "SMKN 1 Jenangan · XII RPL",
+  },
+  {
+    icon: Code2,
+    label: "BIDANG KEAHLIAN",
+    value: "Rekayasa Perangkat Lunak",
+  },
+  {
+    icon: Building2,
+    label: "PENGALAMAN",
+    value: "PKL di PT INKA (Persero)",
+  },
+  {
+    icon: BriefcaseBusiness,
+    label: "PENGEMBANGAN",
+    value: "Website & Aplikasi Digital",
+  },
+  {
+    icon: Database,
+    label: "TEKNOLOGI",
+    value: "React · Vite · Supabase",
+  },
+  {
+    icon: Palette,
+    label: "KREATIVITAS",
+    value: "UI/UX · Visual · Interaktif",
+  },
 ];
-
-function GlobeIcon(props) {
-  return <span className="profile-globe-icon" {...props}>◎</span>;
-}
 
 function Professional() {
   return (
-    <section className="professional-section" id="profile">
+    <section
+      className="professional-section"
+      id="profile"
+    >
       <div className="professional-container">
         <div className="professional-header">
-          <span className="section-eyebrow">PROFIL / 02</span>
+          <span className="section-eyebrow">
+            PROFIL PROFESIONAL / 02
+          </span>
+
           <h2>
-            Dari <em>pembelajaran</em>
+            Warih Seto Samudra:
             <br />
-            menuju solusi digital.
+            <em>Belajar, berkarya,</em>
+            <br />
+            dan berkembang melalui teknologi.
           </h2>
+
           <p>
-            Saya mengembangkan kemampuan RPL melalui pembelajaran di sekolah
-            dan penerapan langsung pada project. Fokus saya mencakup
-            pemrograman, pengembangan website, database, UI/UX, pengolahan
-            data, dan pengembangan aplikasi.
+            Saya adalah Warih Seto Samudra, siswa kelas XII
+            jurusan Rekayasa Perangkat Lunak (RPL) di
+            SMKN 1 Jenangan. Saya memiliki ketertarikan
+            pada pengembangan website, pemrograman,
+            database, dan desain antarmuka digital.
           </p>
+
           <p>
-            Bike Dashboard menjadi salah satu hasil pengembangan selama PKL di
-            PT INKA (Persero), dengan pendekatan visual dan interaktif untuk
-            menyajikan informasi teknis.
+            Melalui pembelajaran di sekolah dan pengalaman
+            Praktik Kerja Lapangan (PKL) di PT INKA (Persero),
+            saya mengembangkan kemampuan dalam menerapkan
+            teknologi untuk membuat solusi digital yang
+            informatif, interaktif, dan mudah digunakan.
+          </p>
+
+          <p>
+            Beberapa bidang yang saya pelajari meliputi
+            pengembangan aplikasi berbasis React dan Vite,
+            pengelolaan database menggunakan Supabase,
+            desain UI/UX, serta penyajian data melalui
+            dashboard interaktif.
+          </p>
+
+          <p>
+            Saya terus berusaha meningkatkan kemampuan teknis,
+            kreativitas, komunikasi, dan pemecahan masalah
+            untuk mempersiapkan diri menghadapi dunia kerja
+            di bidang teknologi informasi.
           </p>
         </div>
 
@@ -43,13 +101,21 @@ function Professional() {
             const Icon = item.icon;
 
             return (
-              <div className="professional-card" key={item.label}>
+              <div
+                className="professional-card"
+                key={item.label}
+              >
                 <div className="professional-card-number">
                   {String(index + 1).padStart(2, "0")}
                 </div>
+
                 <div className="professional-icon">
-                  <Icon size={20} strokeWidth={1.5} />
+                  <Icon
+                    size={20}
+                    strokeWidth={1.5}
+                  />
                 </div>
+
                 <div className="professional-card-content">
                   <span>{item.label}</span>
                   <strong>{item.value}</strong>

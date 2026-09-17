@@ -597,3 +597,58 @@ a.contact-item:hover { background:var(--paper-soft); padding-left:35px; }
     grid-template-columns: 1fr;
   }
 }
+
+.about-highlights {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 36px;
+}
+
+.about-highlight {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 20px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  background: rgba(255, 255, 255, 0.6);
+}
+
+.about-highlight svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.about-highlight div {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.about-highlight span {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  opacity: 0.6;
+}
+
+.about-highlight strong {
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+@media (max-width: 640px) {
+  .about-highlights {
+    grid-template-columns: 1fr;
+    gap: 12px;
+    margin-top: 28px;
+  }
+
+  .about-highlight {
+    padding: 16px;
+  }
+
+  .about-highlight strong {
+    font-size: 13px;
+  }
+}

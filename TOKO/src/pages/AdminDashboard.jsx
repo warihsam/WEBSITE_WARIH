@@ -5,6 +5,7 @@ import {
   FileDown,
   ImagePlus,
   LogOut,
+  Menu,
   Package,
   Pencil,
   Plus,
@@ -12,6 +13,8 @@ import {
   ShoppingBag,
   Trash2,
   X,
+  FolderOpen,
+  Tags,
 } from "lucide-react";
 
 import { supabase } from "../lib/supabase";
@@ -40,6 +43,16 @@ const emptyProduct = {
   is_featured: false,
 };
 
+// =========================================================
+// CATEGORY DEFAULT
+// =========================================================
+
+const emptyCategory = {
+  name: "",
+  slug: "",
+  description: "",
+};
+
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
 
 const ALLOWED_IMAGE_TYPES = [
@@ -54,30 +67,64 @@ export default function AdminDashboard() {
   // AUTH
   // =========================================================
 
-  const {
-    profile,
-    logout,
-  } = useAuth();
+  const { profile, logout } = useAuth();
 
   // =========================================================
-  // STATE
+  // MAIN STATE
   // =========================================================
 
   const [tab, setTab] = useState("products");
 
-  const [products, setProducts] = useState([]);
-  const [orders, setOrders] = useState([]);
-  const [categories, setCategories] = useState([]);
+  const [sidebarOpen, setSidebarOpen] =
+    useState(false);
 
-  const [form, setForm] = useState({
-    ...emptyProduct,
-  });
+  const [products, setProducts] =
+    useState([]);
 
-  const [editing, setEditing] = useState(null);
+  const [orders, setOrders] =
+    useState([]);
 
-  const [file, setFile] = useState(null);
-  const [message, setMessage] = useState("");
-  const [saving, setSaving] = useState(false);
+  const [categories, setCategories] =
+    useState([]);
+
+  const [loading, setLoading] =
+    useState(false);
+
+  const [message, setMessage] =
+    useState("");
+
+  // =========================================================
+  // PRODUCT STATE
+  // =========================================================
+
+  const [form, setForm] =
+    useState({
+      ...emptyProduct,
+    });
+
+  const [editing, setEditing] =
+    useState(null);
+
+  const [file, setFile] =
+    useState(null);
+
+  const [saving, setSaving] =
+    useState(false);
+
+  // =========================================================
+  // CATEGORY STATE
+  // =========================================================
+
+  const [categoryForm, setCategoryForm] =
+    useState({
+      ...emptyCategory,
+    });
+
+  const [editingCategory, setEditingCategory] =
+    useState(null);
+
+  const [savingCategory, setSavingCategory] =
+    useState(false);
 
   // =========================================================
   // ORDER REPORT
@@ -90,89 +137,114 @@ export default function AdminDashboard() {
     useState(false);
 
   // =========================================================
-  // LOAD DATA
+  // LOAD ALL DATA
   // =========================================================
 
   async function load() {
-    const [
-      {
-        data: productsData,
-        error: productsError,
-      },
-      {
-        data: ordersData,
-        error: ordersError,
-      },
-      {
-        data: categoriesData,
-        error: categoriesError,
-      },
-    ] = await Promise.all([
-      supabase
-        .from("products")
-        .select(`
-          *,
-          categories (
-            id,
-            name,
-            slug
+    setLoading(true);
+
+    try {
+      const [
+        {
+          data: productsData,
+          error: productsError,
+        },
+        {
+          data: ordersData,
+          error: ordersError,
+        },
+        {
+          data: categoriesData,
+          error: categoriesError,
+        },
+      ] = await Promise.all([
+        supabase
+          .from("products")
+          .select(`
+            *,
+            categories (
+              id,
+              name,
+              slug
+            )
+          `)
+          .order("created_at", {
+            ascending: false,
+          }),
+
+        supabase
+          .from("orders")
+          .select("*")
+          .order("created_at", {
+            ascending: false,
+          }),
+
+        supabase
+          .from("categories")
+          .select(
+            "id, name, slug, description, created_at"
           )
-        `)
-        .order("created_at", {
-          ascending: false,
-        }),
+          .order("name", {
+            ascending: true,
+          }),
+      ]);
 
-      supabase
-        .from("orders")
-        .select("*")
-        .order("created_at", {
-          ascending: false,
-        }),
+      if (productsError) {
+        console.error(
+          "LOAD PRODUCTS ERROR:",
+          productsError
+        );
 
-      supabase
-        .from("categories")
-        .select("id, name, slug")
-        .order("name", {
-          ascending: true,
-        }),
-    ]);
+        setMessage(
+          `Gagal memuat produk: ${productsError.message}`
+        );
+      }
 
-    if (productsError) {
+      if (ordersError) {
+        console.error(
+          "LOAD ORDERS ERROR:",
+          ordersError
+        );
+
+        setMessage(
+          `Gagal memuat order: ${ordersError.message}`
+        );
+      }
+
+      if (categoriesError) {
+        console.error(
+          "LOAD CATEGORIES ERROR:",
+          categoriesError
+        );
+
+        setMessage(
+          `Gagal memuat kategori: ${categoriesError.message}`
+        );
+      }
+
+      setProducts(
+        productsData || []
+      );
+
+      setOrders(
+        ordersData || []
+      );
+
+      setCategories(
+        categoriesData || []
+      );
+    } catch (error) {
       console.error(
-        "LOAD PRODUCTS ERROR:",
-        productsError
+        "LOAD ERROR:",
+        error
       );
 
       setMessage(
-        `Gagal memuat produk: ${productsError.message}`
+        "Gagal memuat data dashboard."
       );
+    } finally {
+      setLoading(false);
     }
-
-    if (ordersError) {
-      console.error(
-        "LOAD ORDERS ERROR:",
-        ordersError
-      );
-
-      setMessage(
-        `Gagal memuat order: ${ordersError.message}`
-      );
-    }
-
-    if (categoriesError) {
-      console.error(
-        "LOAD CATEGORIES ERROR:",
-        categoriesError
-      );
-
-      setMessage(
-        `Gagal memuat kategori: ${categoriesError.message}`
-      );
-    }
-
-    setProducts(productsData || []);
-    setOrders(ordersData || []);
-    setCategories(categoriesData || []);
   }
 
   useEffect(() => {
@@ -180,144 +252,43 @@ export default function AdminDashboard() {
   }, []);
 
   // =========================================================
-  // GLOBAL REVENUE
+  // ESCAPE SIDEBAR
   // =========================================================
 
-  const revenue = useMemo(() => {
-    return orders
-      .filter(
-        (order) =>
-          order.status !== "cancelled"
-      )
-      .reduce(
-        (sum, order) =>
-          sum + Number(order.total || 0),
-        0
+  useEffect(() => {
+    function handleEscape(event) {
+      if (event.key === "Escape") {
+        setSidebarOpen(false);
+      }
+    }
+
+    document.addEventListener(
+      "keydown",
+      handleEscape
+    );
+
+    return () => {
+      document.removeEventListener(
+        "keydown",
+        handleEscape
       );
-  }, [orders]);
+    };
+  }, []);
 
   // =========================================================
-  // FILTER ORDER REPORT
+  // SIDEBAR
   // =========================================================
 
-  const filteredOrders = useMemo(() => {
-    const now = new Date();
-
-    return orders.filter((order) => {
-      const orderDate = new Date(
-        order.created_at
-      );
-
-      if (
-        Number.isNaN(
-          orderDate.getTime()
-        )
-      ) {
-        return false;
-      }
-
-      // -----------------------------------------------------
-      // WEEKLY
-      // 7 HARI TERAKHIR
-      // -----------------------------------------------------
-
-      if (orderPeriod === "weekly") {
-        const startDate = new Date(now);
-
-        startDate.setDate(
-          now.getDate() - 6
-        );
-
-        startDate.setHours(
-          0,
-          0,
-          0,
-          0
-        );
-
-        return orderDate >= startDate;
-      }
-
-      // -----------------------------------------------------
-      // MONTHLY
-      // BULAN BERJALAN
-      // -----------------------------------------------------
-
-      if (orderPeriod === "monthly") {
-        return (
-          orderDate.getMonth() ===
-            now.getMonth() &&
-          orderDate.getFullYear() ===
-            now.getFullYear()
-        );
-      }
-
-      // -----------------------------------------------------
-      // YEARLY
-      // TAHUN BERJALAN
-      // -----------------------------------------------------
-
-      if (orderPeriod === "yearly") {
-        return (
-          orderDate.getFullYear() ===
-          now.getFullYear()
-        );
-      }
-
-      return true;
-    });
-  }, [orders, orderPeriod]);
+  function handleTabChange(nextTab) {
+    setTab(nextTab);
+    setSidebarOpen(false);
+  }
 
   // =========================================================
-  // FILTERED REVENUE
+  // PRODUCT FORM
   // =========================================================
 
-  const filteredRevenue = useMemo(() => {
-    return filteredOrders
-      .filter(
-        (order) =>
-          order.status !== "cancelled"
-      )
-      .reduce(
-        (sum, order) =>
-          sum + Number(order.total || 0),
-        0
-      );
-  }, [filteredOrders]);
-
-  // =========================================================
-  // ORDER STATISTICS
-  // =========================================================
-
-  const completedOrders = useMemo(() => {
-    return filteredOrders.filter(
-      (order) =>
-        order.status === "completed"
-    ).length;
-  }, [filteredOrders]);
-
-  const pendingOrders = useMemo(() => {
-    return filteredOrders.filter(
-      (order) =>
-        order.status === "pending"
-    ).length;
-  }, [filteredOrders]);
-
-  const cancelledOrders = useMemo(() => {
-    return filteredOrders.filter(
-      (order) =>
-        order.status === "cancelled"
-    ).length;
-  }, [filteredOrders]);
-
-  // =========================================================
-  // FORM HANDLER
-  // =========================================================
-
-  function updateForm(
-    field,
-    value
-  ) {
+  function updateForm(field, value) {
     setForm((current) => ({
       ...current,
       [field]: value,
@@ -325,14 +296,253 @@ export default function AdminDashboard() {
   }
 
   // =========================================================
-  // EDIT PRODUCT
+  // CATEGORY FORM
+  // =========================================================
+
+  function updateCategoryForm(
+    field,
+    value
+  ) {
+    setCategoryForm((current) => ({
+      ...current,
+      [field]: value,
+    }));
+  }
+
+  // =========================================================
+  // SLUG
+  // =========================================================
+
+  function createSlug(name) {
+    return name
+      .toLowerCase()
+      .trim()
+      .replace(
+        /[^a-z0-9\s-]/g,
+        ""
+      )
+      .replace(
+        /\s+/g,
+        "-"
+      )
+      .replace(
+        /-+/g,
+        "-"
+      );
+  }
+
+  // =========================================================
+  // CATEGORY CRUD
+  // =========================================================
+
+  function editCategory(category) {
+    setEditingCategory(
+      category.id
+    );
+
+    setCategoryForm({
+      name:
+        category.name || "",
+
+      slug:
+        category.slug || "",
+
+      description:
+        category.description || "",
+    });
+
+    setMessage("");
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  }
+
+  function resetCategoryForm() {
+    setEditingCategory(null);
+
+    setCategoryForm({
+      ...emptyCategory,
+    });
+  }
+
+  async function saveCategory(event) {
+    event.preventDefault();
+
+    if (savingCategory) {
+      return;
+    }
+
+    setSavingCategory(true);
+    setMessage("");
+
+    try {
+      const name =
+        categoryForm.name.trim();
+
+      if (!name) {
+        throw new Error(
+          "Nama kategori wajib diisi."
+        );
+      }
+
+      const slug =
+        categoryForm.slug.trim()
+          ? createSlug(
+              categoryForm.slug
+            )
+          : createSlug(name);
+
+      if (!slug) {
+        throw new Error(
+          "Slug kategori tidak valid."
+        );
+      }
+
+      const payload = {
+        name,
+        slug,
+        description:
+          categoryForm.description.trim() ||
+          null,
+      };
+
+      let result;
+
+      if (editingCategory) {
+        result =
+          await supabase
+            .from("categories")
+            .update(payload)
+            .eq(
+              "id",
+              editingCategory
+            );
+      } else {
+        result =
+          await supabase
+            .from("categories")
+            .insert(payload);
+      }
+
+      if (result.error) {
+        if (
+          result.error.code ===
+          "23505"
+        ) {
+          throw new Error(
+            "Nama atau slug kategori sudah digunakan."
+          );
+        }
+
+        throw new Error(
+          `Gagal menyimpan kategori: ${result.error.message}`
+        );
+      }
+
+      setMessage(
+        editingCategory
+          ? "Kategori berhasil diperbarui."
+          : "Kategori berhasil ditambahkan."
+      );
+
+      resetCategoryForm();
+
+      await load();
+    } catch (error) {
+      console.error(
+        "SAVE CATEGORY ERROR:",
+        error
+      );
+
+      setMessage(
+        error instanceof Error
+          ? error.message
+          : "Gagal menyimpan kategori."
+      );
+    } finally {
+      setSavingCategory(false);
+    }
+  }
+
+  async function deleteCategory(
+    category
+  ) {
+    const usedByProducts =
+      products.filter(
+        (product) =>
+          product.category_id ===
+          category.id
+      );
+
+    if (
+      usedByProducts.length > 0
+    ) {
+      alert(
+        `Kategori "${category.name}" masih digunakan oleh ${usedByProducts.length} produk. Ubah kategori produk terlebih dahulu sebelum menghapus kategori ini.`
+      );
+
+      return;
+    }
+
+    const confirmed =
+      window.confirm(
+        `Hapus kategori "${category.name}"?`
+      );
+
+    if (!confirmed) {
+      return;
+    }
+
+    setMessage("");
+
+    const { error } =
+      await supabase
+        .from("categories")
+        .delete()
+        .eq(
+          "id",
+          category.id
+        );
+
+    if (error) {
+      console.error(
+        "DELETE CATEGORY ERROR:",
+        error
+      );
+
+      setMessage(
+        `Gagal menghapus kategori: ${error.message}`
+      );
+
+      return;
+    }
+
+    if (
+      editingCategory ===
+      category.id
+    ) {
+      resetCategoryForm();
+    }
+
+    setMessage(
+      "Kategori berhasil dihapus."
+    );
+
+    await load();
+  }
+
+  // =========================================================
+  // PRODUCT EDIT
   // =========================================================
 
   function editProduct(product) {
     setEditing(product.id);
 
     setForm({
-      name: product.name || "",
+      name:
+        product.name || "",
 
       category_id:
         product.category_id || "",
@@ -347,12 +557,16 @@ export default function AdminDashboard() {
         product.description || "",
 
       sizes:
-        Array.isArray(product.sizes)
+        Array.isArray(
+          product.sizes
+        )
           ? product.sizes.join(",")
           : "",
 
       colors:
-        Array.isArray(product.colors)
+        Array.isArray(
+          product.colors
+        )
           ? product.colors.join(",")
           : "",
 
@@ -366,7 +580,8 @@ export default function AdminDashboard() {
         product.image_url || "",
 
       is_active:
-        product.is_active === undefined
+        product.is_active ===
+        undefined
           ? true
           : !!product.is_active,
 
@@ -383,10 +598,6 @@ export default function AdminDashboard() {
     });
   }
 
-  // =========================================================
-  // RESET FORM
-  // =========================================================
-
   function resetForm() {
     setEditing(null);
 
@@ -395,11 +606,10 @@ export default function AdminDashboard() {
     });
 
     setFile(null);
-    setMessage("");
   }
 
   // =========================================================
-  // VALIDATE IMAGE
+  // IMAGE
   // =========================================================
 
   function validateImage(
@@ -431,9 +641,38 @@ export default function AdminDashboard() {
     }
   }
 
-  // =========================================================
-  // UPLOAD IMAGE
-  // =========================================================
+  function handleFileChange(e) {
+    const selectedFile =
+      e.target.files?.[0] ||
+      null;
+
+    if (!selectedFile) {
+      setFile(null);
+      return;
+    }
+
+    try {
+      validateImage(
+        selectedFile
+      );
+
+      setFile(
+        selectedFile
+      );
+
+      setMessage(
+        `Gambar dipilih: ${selectedFile.name}`
+      );
+    } catch (error) {
+      setFile(null);
+
+      e.target.value = "";
+
+      setMessage(
+        error.message
+      );
+    }
+  }
 
   async function uploadImage() {
     if (!file) {
@@ -453,7 +692,8 @@ export default function AdminDashboard() {
       "jpg";
 
     const uniqueId =
-      typeof crypto !== "undefined" &&
+      typeof crypto !==
+        "undefined" &&
       typeof crypto.randomUUID ===
         "function"
         ? crypto.randomUUID()
@@ -464,16 +704,6 @@ export default function AdminDashboard() {
     const path =
       `products/${Date.now()}-${uniqueId}.${extension}`;
 
-    console.log(
-      "UPLOAD START:",
-      {
-        bucket: "product-images",
-        path,
-        type: file.type,
-        size: file.size,
-      }
-    );
-
     const {
       error: uploadError,
     } = await supabase.storage
@@ -482,18 +712,17 @@ export default function AdminDashboard() {
         path,
         file,
         {
-          cacheControl: "3600",
+          cacheControl:
+            "3600",
+
           upsert: false,
-          contentType: file.type,
+
+          contentType:
+            file.type,
         }
       );
 
     if (uploadError) {
-      console.error(
-        "UPLOAD ERROR DETAIL:",
-        uploadError
-      );
-
       throw new Error(
         `Upload gambar gagal: ${uploadError.message}`
       );
@@ -501,63 +730,48 @@ export default function AdminDashboard() {
 
     const { data } =
       supabase.storage
-        .from("product-images")
+        .from(
+          "product-images"
+        )
         .getPublicUrl(path);
 
-    const publicUrl =
-      data?.publicUrl;
-
-    if (!publicUrl) {
+    if (!data?.publicUrl) {
       throw new Error(
         "URL gambar gagal dibuat."
       );
     }
 
-    return publicUrl;
+    return data.publicUrl;
   }
 
   // =========================================================
-  // CREATE SLUG
+  // PRODUCT SAVE
   // =========================================================
 
-  function createSlug(name) {
-    return name
-      .toLowerCase()
-      .trim()
-      .replace(
-        /[^a-z0-9\s-]/g,
-        ""
-      )
-      .replace(
-        /\s+/g,
-        "-"
-      )
-      .replace(
-        /-+/g,
-        "-"
-      );
-  }
+  async function saveProduct(
+    event
+  ) {
+    event.preventDefault();
 
-  // =========================================================
-  // SAVE PRODUCT
-  // =========================================================
-
-  async function saveProduct(e) {
-    e.preventDefault();
-
-    if (saving) return;
+    if (saving) {
+      return;
+    }
 
     setSaving(true);
     setMessage("");
 
     try {
-      if (!form.name.trim()) {
+      if (
+        !form.name.trim()
+      ) {
         throw new Error(
           "Nama produk wajib diisi."
         );
       }
 
-      if (!form.category_id) {
+      if (
+        !form.category_id
+      ) {
         throw new Error(
           "Kategori produk wajib dipilih."
         );
@@ -578,16 +792,6 @@ export default function AdminDashboard() {
       ) {
         throw new Error(
           "Stok produk tidak valid."
-        );
-      }
-
-      if (
-        form.compare_price !== "" &&
-        Number(form.compare_price) <
-          0
-      ) {
-        throw new Error(
-          "Harga coret tidak valid."
         );
       }
 
@@ -614,7 +818,8 @@ export default function AdminDashboard() {
           Number(form.price),
 
         compare_price:
-          form.compare_price === ""
+          form.compare_price ===
+          ""
             ? null
             : Number(
                 form.compare_price
@@ -639,18 +844,16 @@ export default function AdminDashboard() {
         sizes:
           form.sizes
             .split(",")
-            .map(
-              (size) =>
-                size.trim()
+            .map((size) =>
+              size.trim()
             )
             .filter(Boolean),
 
         colors:
           form.colors
             .split(",")
-            .map(
-              (color) =>
-                color.trim()
+            .map((color) =>
+              color.trim()
             )
             .filter(Boolean),
 
@@ -700,47 +903,10 @@ export default function AdminDashboard() {
       setMessage(
         error instanceof Error
           ? error.message
-          : "Terjadi kesalahan saat menyimpan produk."
+          : "Gagal menyimpan produk."
       );
     } finally {
       setSaving(false);
-    }
-  }
-
-  // =========================================================
-  // FILE CHANGE
-  // =========================================================
-
-  function handleFileChange(e) {
-    const selectedFile =
-      e.target.files?.[0] ||
-      null;
-
-    if (!selectedFile) {
-      setFile(null);
-      return;
-    }
-
-    try {
-      validateImage(
-        selectedFile
-      );
-
-      setFile(
-        selectedFile
-      );
-
-      setMessage(
-        `Gambar dipilih: ${selectedFile.name}`
-      );
-    } catch (error) {
-      setFile(null);
-
-      e.target.value = "";
-
-      setMessage(
-        error.message
-      );
     }
   }
 
@@ -751,9 +917,15 @@ export default function AdminDashboard() {
   async function deleteProduct(
     id
   ) {
+    const product =
+      products.find(
+        (item) =>
+          item.id === id
+      );
+
     if (
-      !confirm(
-        "Hapus produk ini?"
+      !window.confirm(
+        `Hapus produk "${product?.name || ""}"?`
       )
     ) {
       return;
@@ -788,7 +960,7 @@ export default function AdminDashboard() {
   }
 
   // =========================================================
-  // UPDATE ORDER STATUS
+  // ORDERS
   // =========================================================
 
   async function updateOrderStatus(
@@ -807,11 +979,6 @@ export default function AdminDashboard() {
         );
 
     if (error) {
-      console.error(
-        "UPDATE ORDER ERROR:",
-        error
-      );
-
       setMessage(
         `Gagal memperbarui order: ${error.message}`
       );
@@ -827,12 +994,160 @@ export default function AdminDashboard() {
   }
 
   // =========================================================
-  // EXPORT ORDER PDF
+  // REVENUE
+  // =========================================================
+
+  const revenue = useMemo(() => {
+    return orders
+      .filter(
+        (order) =>
+          order.status !==
+          "cancelled"
+      )
+      .reduce(
+        (
+          sum,
+          order
+        ) =>
+          sum +
+          Number(
+            order.total || 0
+          ),
+        0
+      );
+  }, [orders]);
+
+  // =========================================================
+  // FILTER REPORT
+  // =========================================================
+
+  const filteredOrders =
+    useMemo(() => {
+      const now =
+        new Date();
+
+      return orders.filter(
+        (order) => {
+          const orderDate =
+            new Date(
+              order.created_at
+            );
+
+          if (
+            Number.isNaN(
+              orderDate.getTime()
+            )
+          ) {
+            return false;
+          }
+
+          if (
+            orderPeriod ===
+            "weekly"
+          ) {
+            const startDate =
+              new Date(
+                now
+              );
+
+            startDate.setDate(
+              now.getDate() -
+                6
+            );
+
+            startDate.setHours(
+              0,
+              0,
+              0,
+              0
+            );
+
+            return (
+              orderDate >=
+              startDate
+            );
+          }
+
+          if (
+            orderPeriod ===
+            "monthly"
+          ) {
+            return (
+              orderDate.getMonth() ===
+                now.getMonth() &&
+              orderDate.getFullYear() ===
+                now.getFullYear()
+            );
+          }
+
+          if (
+            orderPeriod ===
+            "yearly"
+          ) {
+            return (
+              orderDate.getFullYear() ===
+              now.getFullYear()
+            );
+          }
+
+          return true;
+        }
+      );
+    }, [
+      orders,
+      orderPeriod,
+    ]);
+
+  const filteredRevenue =
+    useMemo(() => {
+      return filteredOrders
+        .filter(
+          (order) =>
+            order.status !==
+            "cancelled"
+        )
+        .reduce(
+          (
+            sum,
+            order
+          ) =>
+            sum +
+            Number(
+              order.total || 0
+            ),
+          0
+        );
+    }, [filteredOrders]);
+
+  const completedOrders =
+    filteredOrders.filter(
+      (order) =>
+        order.status ===
+        "completed"
+    ).length;
+
+  const pendingOrders =
+    filteredOrders.filter(
+      (order) =>
+        order.status ===
+        "pending"
+    ).length;
+
+  const cancelledOrders =
+    filteredOrders.filter(
+      (order) =>
+        order.status ===
+        "cancelled"
+    ).length;
+
+  // =========================================================
+  // EXPORT PDF
   // =========================================================
 
   async function exportOrdersPDF() {
     if (
-      filteredOrders.length === 0
+      filteredOrders.length ===
+      0
     ) {
       alert(
         "Tidak ada pesanan pada periode yang dipilih."
@@ -859,15 +1174,6 @@ export default function AdminDashboard() {
         yearly:
           "Tahunan",
       };
-
-      const periodLabel =
-        periodLabels[
-          orderPeriod
-        ];
-
-      // =====================================================
-      // HEADER
-      // =====================================================
 
       doc.setFont(
         "helvetica",
@@ -898,7 +1204,11 @@ export default function AdminDashboard() {
       doc.setFontSize(9);
 
       doc.text(
-        `Periode: ${periodLabel}`,
+        `Periode: ${
+          periodLabels[
+            orderPeriod
+          ]
+        }`,
         14,
         34
       );
@@ -910,10 +1220,6 @@ export default function AdminDashboard() {
         14,
         40
       );
-
-      // =====================================================
-      // SUMMARY
-      // =====================================================
 
       doc.setFont(
         "helvetica",
@@ -954,48 +1260,6 @@ export default function AdminDashboard() {
         58
       );
 
-      // =====================================================
-      // STATUS LABEL
-      // =====================================================
-
-      const statusLabels = {
-        pending:
-          "Pending",
-
-        confirmed:
-          "Dikonfirmasi",
-
-        processing:
-          "Diproses",
-
-        shipped:
-          "Dikirim",
-
-        completed:
-          "Selesai",
-
-        cancelled:
-          "Dibatalkan",
-      };
-
-      const paymentLabels = {
-        unpaid:
-          "Belum Dibayar",
-
-        paid:
-          "Sudah Dibayar",
-
-        failed:
-          "Gagal",
-
-        refunded:
-          "Refund",
-      };
-
-      // =====================================================
-      // TABLE
-      // =====================================================
-
       const tableData =
         filteredOrders.map(
           (
@@ -1003,33 +1267,20 @@ export default function AdminDashboard() {
             index
           ) => [
             index + 1,
-
             order.order_number ||
               "-",
-
             order.customer_name ||
               "-",
-
             order.customer_phone ||
               order.phone ||
               "-",
-
             formatDate(
               order.created_at
             ),
-
-            statusLabels[
-              order.status
-            ] ||
-              order.status ||
+            order.status ||
               "-",
-
-            paymentLabels[
-              order.payment_status
-            ] ||
-              order.payment_status ||
+            order.payment_status ||
               "-",
-
             formatRupiah(
               order.total
             ),
@@ -1062,54 +1313,7 @@ export default function AdminDashboard() {
           fontSize: 8,
           cellPadding: 3,
         },
-
-        headStyles: {
-          fontStyle:
-            "bold",
-        },
-
-        columnStyles: {
-          0: {
-            cellWidth: 10,
-            halign:
-              "center",
-          },
-
-          1: {
-            cellWidth: 32,
-          },
-
-          2: {
-            cellWidth: 42,
-          },
-
-          3: {
-            cellWidth: 30,
-          },
-
-          4: {
-            cellWidth: 32,
-          },
-
-          5: {
-            cellWidth: 30,
-          },
-
-          6: {
-            cellWidth: 30,
-          },
-
-          7: {
-            cellWidth: 35,
-            halign:
-              "right",
-          },
-        },
       });
-
-      // =====================================================
-      // FOOTER
-      // =====================================================
 
       const finalY =
         doc.lastAutoTable
@@ -1130,23 +1334,6 @@ export default function AdminDashboard() {
         finalY
       );
 
-      doc.setFont(
-        "helvetica",
-        "normal"
-      );
-
-      doc.setFontSize(8);
-
-      doc.text(
-        "Laporan ini dibuat secara otomatis oleh sistem WS Fashion.",
-        14,
-        finalY + 8
-      );
-
-      // =====================================================
-      // SAVE PDF
-      // =====================================================
-
       const date =
         new Date()
           .toISOString()
@@ -1160,17 +1347,15 @@ export default function AdminDashboard() {
       );
     } catch (error) {
       console.error(
-        "EXPORT PDF ERROR:",
+        "PDF ERROR:",
         error
       );
 
       alert(
-        "Gagal membuat laporan PDF."
+        "Gagal membuat PDF."
       );
     } finally {
-      setExportingPDF(
-        false
-      );
+      setExportingPDF(false);
     }
   }
 
@@ -1186,25 +1371,61 @@ export default function AdminDashboard() {
         "LOGOUT ERROR:",
         error
       );
-
-      setMessage(
-        "Logout gagal. Silakan coba lagi."
-      );
     }
   }
 
   // =========================================================
-  // UI
+  // RETURN
   // =========================================================
 
   return (
     <main className="admin-page">
 
       {/* =====================================================
+          MOBILE HEADER
+      ====================================================== */}
+
+      <header className="admin-mobile-header">
+
+        <div className="brand">
+          WS<span>FASHION</span>
+        </div>
+
+        <button
+          type="button"
+          className="admin-mobile-menu"
+          onClick={() =>
+            setSidebarOpen(true)
+          }
+          aria-label="Buka menu admin"
+        >
+          <Menu size={22} />
+        </button>
+
+      </header>
+
+      {/* =====================================================
           SIDEBAR
       ====================================================== */}
 
-      <aside className="admin-sidebar">
+      <aside
+        className={`admin-sidebar ${
+          sidebarOpen
+            ? "open"
+            : ""
+        }`}
+      >
+
+        <button
+          type="button"
+          className="admin-sidebar-close"
+          onClick={() =>
+            setSidebarOpen(false)
+          }
+          aria-label="Tutup menu"
+        >
+          <X size={22} />
+        </button>
 
         <div className="brand admin-brand">
           WS<span>FASHION</span>
@@ -1216,35 +1437,52 @@ export default function AdminDashboard() {
             "Admin"}
         </p>
 
-        {/* PRODUCTS */}
-
         <button
+          type="button"
           className={
             tab === "products"
               ? "admin-nav active"
               : "admin-nav"
           }
           onClick={() =>
-            setTab("products")
+            handleTabChange(
+              "products"
+            )
           }
-          type="button"
         >
           <Package size={18} />
           Products
         </button>
 
-        {/* ORDERS */}
+        <button
+          type="button"
+          className={
+            tab === "categories"
+              ? "admin-nav active"
+              : "admin-nav"
+          }
+          onClick={() =>
+            handleTabChange(
+              "categories"
+            )
+          }
+        >
+          <Tags size={18} />
+          Categories
+        </button>
 
         <button
+          type="button"
           className={
             tab === "orders"
               ? "admin-nav active"
               : "admin-nav"
           }
           onClick={() =>
-            setTab("orders")
+            handleTabChange(
+              "orders"
+            )
           }
-          type="button"
         >
           <ShoppingBag
             size={18}
@@ -1252,18 +1490,31 @@ export default function AdminDashboard() {
           Orders
         </button>
 
-        {/* LOGOUT */}
-
         <button
-          className="admin-nav logout"
-          onClick={handleLogout}
           type="button"
+          className="admin-nav logout"
+          onClick={
+            handleLogout
+          }
         >
           <LogOut size={18} />
           Logout
         </button>
 
       </aside>
+
+      {/* OVERLAY */}
+
+      <div
+        className={`admin-sidebar-overlay ${
+          sidebarOpen
+            ? "open"
+            : ""
+        }`}
+        onClick={() =>
+          setSidebarOpen(false)
+        }
+      />
 
       {/* =====================================================
           CONTENT
@@ -1291,9 +1542,7 @@ export default function AdminDashboard() {
 
         </div>
 
-        {/* =================================================
-            GLOBAL STATS
-        ================================================== */}
+        {/* STATS */}
 
         <div className="stats-grid">
 
@@ -1304,6 +1553,16 @@ export default function AdminDashboard() {
 
             <strong>
               {products.length}
+            </strong>
+          </div>
+
+          <div className="stat-card">
+            <span>
+              Categories
+            </span>
+
+            <strong>
+              {categories.length}
             </strong>
           </div>
 
@@ -1340,11 +1599,17 @@ export default function AdminDashboard() {
 
             <div className="admin-section-heading">
 
-              <h2>
-                {editing
-                  ? "Edit Product"
-                  : "Add Product"}
-              </h2>
+              <div>
+                <p className="eyebrow">
+                  PRODUCT MANAGEMENT
+                </p>
+
+                <h2>
+                  {editing
+                    ? "Edit Product"
+                    : "Add Product"}
+                </h2>
+              </div>
 
               {editing && (
                 <button
@@ -1353,14 +1618,13 @@ export default function AdminDashboard() {
                   onClick={
                     resetForm
                   }
+                  aria-label="Batal edit"
                 >
                   <X />
                 </button>
               )}
 
             </div>
-
-            {/* PRODUCT FORM */}
 
             <form
               className="admin-form"
@@ -1383,7 +1647,7 @@ export default function AdminDashboard() {
                       e.target.value
                     )
                   }
-                  placeholder="Contoh: Oversized Basic Tee Black"
+                  placeholder="Oversized Basic Tee Black"
                   required
                 />
               </label>
@@ -1447,10 +1711,7 @@ export default function AdminDashboard() {
               </label>
 
               <label>
-                Harga Coret{" "}
-                <small>
-                  (opsional)
-                </small>
+                Harga Coret
 
                 <input
                   type="number"
@@ -1488,10 +1749,7 @@ export default function AdminDashboard() {
               </label>
 
               <label>
-                SKU{" "}
-                <small>
-                  (opsional)
-                </small>
+                SKU
 
                 <input
                   type="text"
@@ -1504,15 +1762,12 @@ export default function AdminDashboard() {
                       e.target.value
                     )
                   }
-                  placeholder="WS-TEE-BLK-001"
+                  placeholder="WS-TEE-001"
                 />
               </label>
 
               <label>
-                Ukuran{" "}
-                <small>
-                  (pisahkan koma)
-                </small>
+                Ukuran
 
                 <input
                   value={
@@ -1529,10 +1784,7 @@ export default function AdminDashboard() {
               </label>
 
               <label>
-                Warna{" "}
-                <small>
-                  (pisahkan koma)
-                </small>
+                Warna
 
                 <input
                   value={
@@ -1567,10 +1819,7 @@ export default function AdminDashboard() {
               </label>
 
               <label className="full">
-                URL gambar{" "}
-                <small>
-                  (opsional jika upload gambar)
-                </small>
+                URL Gambar
 
                 <input
                   type="url"
@@ -1606,12 +1855,6 @@ export default function AdminDashboard() {
                 />
 
               </label>
-
-              <small className="full">
-                JPG, PNG, WEBP,
-                atau GIF.
-                Maksimal 5 MB.
-              </small>
 
               <label className="check full">
 
@@ -1661,29 +1904,35 @@ export default function AdminDashboard() {
               )}
 
               <button
+                type="submit"
                 className="button dark"
                 disabled={
                   saving
                 }
-                type="submit"
               >
-
-                {editing ? (
-                  <Pencil
-                    size={17}
-                  />
+                {saving ? (
+                  <>
+                    <RefreshCw
+                      size={17}
+                      className="admin-spin"
+                    />
+                    Menyimpan...
+                  </>
+                ) : editing ? (
+                  <>
+                    <Pencil
+                      size={17}
+                    />
+                    Update Product
+                  </>
                 ) : (
-                  <Plus
-                    size={17}
-                  />
+                  <>
+                    <Plus
+                      size={17}
+                    />
+                    Add Product
+                  </>
                 )}
-
-                {saving
-                  ? "Menyimpan..."
-                  : editing
-                  ? "Update Product"
-                  : "Add Product"}
-
               </button>
 
             </form>
@@ -1691,9 +1940,37 @@ export default function AdminDashboard() {
             {/* PRODUCT LIST */}
 
             <div className="admin-section-heading">
-              <h2>
-                Product List
-              </h2>
+
+              <div>
+                <p className="eyebrow">
+                  INVENTORY
+                </p>
+
+                <h2>
+                  Product List
+                </h2>
+              </div>
+
+              <button
+                type="button"
+                className="icon-button"
+                onClick={
+                  load
+                }
+                disabled={
+                  loading
+                }
+                aria-label="Refresh produk"
+              >
+                <RefreshCw
+                  className={
+                    loading
+                      ? "admin-spin"
+                      : ""
+                  }
+                />
+              </button>
+
             </div>
 
             <div className="admin-table-wrap">
@@ -1743,7 +2020,6 @@ export default function AdminDashboard() {
                       >
 
                         <td>
-
                           <div className="table-product">
 
                             {product.image_url ? (
@@ -1768,14 +2044,15 @@ export default function AdminDashboard() {
                             </b>
 
                           </div>
-
                         </td>
 
                         <td>
-                          {product
-                            .categories
-                            ?.name ||
-                            "—"}
+                          {
+                            product
+                              .categories
+                              ?.name ||
+                            "—"
+                          }
                         </td>
 
                         <td>
@@ -1805,14 +2082,14 @@ export default function AdminDashboard() {
                         <td>
 
                           <button
+                            type="button"
                             className="table-action"
                             onClick={() =>
                               editProduct(
                                 product
                               )
                             }
-                            type="button"
-                            aria-label={`Edit ${product.name}`}
+                            aria-label="Edit produk"
                           >
                             <Pencil
                               size={16}
@@ -1820,14 +2097,14 @@ export default function AdminDashboard() {
                           </button>
 
                           <button
+                            type="button"
                             className="table-action danger"
                             onClick={() =>
                               deleteProduct(
                                 product.id
                               )
                             }
-                            type="button"
-                            aria-label={`Hapus ${product.name}`}
+                            aria-label="Hapus produk"
                           >
                             <Trash2
                               size={16}
@@ -1856,17 +2133,297 @@ export default function AdminDashboard() {
         )}
 
         {/* =================================================
+            CATEGORIES
+        ================================================== */}
+
+        {tab === "categories" && (
+          <>
+
+            <div className="admin-section-heading">
+
+              <div>
+
+                <p className="eyebrow">
+                  CATEGORY MANAGEMENT
+                </p>
+
+                <h2>
+                  {editingCategory
+                    ? "Edit Category"
+                    : "Add Category"}
+                </h2>
+
+              </div>
+
+              {editingCategory && (
+                <button
+                  type="button"
+                  className="icon-button"
+                  onClick={
+                    resetCategoryForm
+                  }
+                  aria-label="Batal edit kategori"
+                >
+                  <X />
+                </button>
+              )}
+
+            </div>
+
+            {/* CATEGORY FORM */}
+
+            <form
+              className="admin-form"
+              onSubmit={
+                saveCategory
+              }
+            >
+
+              <label>
+                Nama Kategori
+
+                <input
+                  type="text"
+                  value={
+                    categoryForm.name
+                  }
+                  onChange={(e) =>
+                    updateCategoryForm(
+                      "name",
+                      e.target.value
+                    )
+                  }
+                  placeholder="Contoh: Hoodie"
+                  required
+                />
+              </label>
+
+              <label>
+                Slug
+
+                <input
+                  type="text"
+                  value={
+                    categoryForm.slug
+                  }
+                  onChange={(e) =>
+                    updateCategoryForm(
+                      "slug",
+                      e.target.value
+                    )
+                  }
+                  placeholder="hoodie"
+                />
+
+                <small>
+                  Kosongkan untuk membuat slug otomatis.
+                </small>
+              </label>
+
+              <label className="full">
+                Deskripsi
+
+                <textarea
+                  rows="4"
+                  value={
+                    categoryForm.description
+                  }
+                  onChange={(e) =>
+                    updateCategoryForm(
+                      "description",
+                      e.target.value
+                    )
+                  }
+                  placeholder="Deskripsi kategori..."
+                />
+              </label>
+
+              {message && (
+                <div
+                  className="message full"
+                  role="alert"
+                >
+                  {message}
+                </div>
+              )}
+
+              <button
+                type="submit"
+                className="button dark"
+                disabled={
+                  savingCategory
+                }
+              >
+
+                {savingCategory ? (
+                  <>
+                    <RefreshCw
+                      size={17}
+                      className="admin-spin"
+                    />
+
+                    Menyimpan...
+                  </>
+                ) : editingCategory ? (
+                  <>
+                    <Pencil
+                      size={17}
+                    />
+
+                    Update Category
+                  </>
+                ) : (
+                  <>
+                    <Plus
+                      size={17}
+                    />
+
+                    Add Category
+                  </>
+                )}
+
+              </button>
+
+            </form>
+
+            {/* CATEGORY LIST */}
+
+            <div className="admin-section-heading">
+
+              <div>
+
+                <p className="eyebrow">
+                  DATABASE
+                </p>
+
+                <h2>
+                  Category List
+                </h2>
+
+              </div>
+
+              <span className="admin-role">
+                {categories.length} CATEGORY
+              </span>
+
+            </div>
+
+            <div className="category-grid">
+
+              {categories.map(
+                (category) => {
+
+                  const productCount =
+                    products.filter(
+                      (product) =>
+                        product.category_id ===
+                        category.id
+                    ).length;
+
+                  return (
+                    <div
+                      className="category-card"
+                      key={
+                        category.id
+                      }
+                    >
+
+                      <div className="category-card-icon">
+                        <FolderOpen
+                          size={24}
+                        />
+                      </div>
+
+                      <div className="category-card-content">
+
+                        <h3>
+                          {
+                            category.name
+                          }
+                        </h3>
+
+                        <span>
+                          /{category.slug}
+                        </span>
+
+                        <p>
+                          {
+                            category.description ||
+                            "Tidak ada deskripsi."
+                          }
+                        </p>
+
+                        <small>
+                          {productCount}{" "}
+                          produk
+                        </small>
+
+                      </div>
+
+                      <div className="category-card-actions">
+
+                        <button
+                          type="button"
+                          className="table-action"
+                          onClick={() =>
+                            editCategory(
+                              category
+                            )
+                          }
+                          aria-label="Edit kategori"
+                        >
+                          <Pencil
+                            size={16}
+                          />
+                        </button>
+
+                        <button
+                          type="button"
+                          className="table-action danger"
+                          onClick={() =>
+                            deleteCategory(
+                              category
+                            )
+                          }
+                          aria-label="Hapus kategori"
+                        >
+                          <Trash2
+                            size={16}
+                          />
+                        </button>
+
+                      </div>
+
+                    </div>
+                  );
+                }
+              )}
+
+            </div>
+
+            {!categories.length && (
+              <div className="empty-state">
+                Belum ada kategori.
+              </div>
+            )}
+
+          </>
+        )}
+
+        {/* =================================================
             ORDERS
         ================================================== */}
 
         {tab === "orders" && (
           <div className="admin-section">
 
-            {/* ORDER HEADER */}
-
             <div className="admin-section-heading">
 
               <div>
+
+                <p className="eyebrow">
+                  ORDER MANAGEMENT
+                </p>
 
                 <h2>
                   Orders
@@ -1914,7 +2471,7 @@ export default function AdminDashboard() {
 
             </div>
 
-            {/* PERIOD FILTER */}
+            {/* REPORT FILTER */}
 
             <div className="order-report-toolbar">
 
@@ -1996,7 +2553,6 @@ export default function AdminDashboard() {
             <div className="order-report-stats">
 
               <div className="order-report-card">
-
                 <span>
                   Total Pesanan
                 </span>
@@ -2006,13 +2562,11 @@ export default function AdminDashboard() {
                     filteredOrders.length
                   }
                 </strong>
-
               </div>
 
               <div className="order-report-card">
-
                 <span>
-                  Pesanan Selesai
+                  Selesai
                 </span>
 
                 <strong>
@@ -2020,11 +2574,9 @@ export default function AdminDashboard() {
                     completedOrders
                   }
                 </strong>
-
               </div>
 
               <div className="order-report-card">
-
                 <span>
                   Pending
                 </span>
@@ -2034,11 +2586,9 @@ export default function AdminDashboard() {
                     pendingOrders
                   }
                 </strong>
-
               </div>
 
               <div className="order-report-card">
-
                 <span>
                   Omzet
                 </span>
@@ -2048,7 +2598,6 @@ export default function AdminDashboard() {
                     filteredRevenue
                   )}
                 </strong>
-
               </div>
 
             </div>
@@ -2103,22 +2652,28 @@ export default function AdminDashboard() {
 
                         <td>
                           <b>
-                            {order.order_number ||
-                              "—"}
+                            {
+                              order.order_number ||
+                              "—"
+                            }
                           </b>
                         </td>
 
                         <td>
 
                           <b>
-                            {order.customer_name ||
-                              "—"}
+                            {
+                              order.customer_name ||
+                              "—"
+                            }
                           </b>
 
                           <small>
-                            {order.customer_phone ||
+                            {
+                              order.customer_phone ||
                               order.phone ||
-                              "—"}
+                              "—"
+                            }
                           </small>
 
                         </td>
@@ -2130,8 +2685,10 @@ export default function AdminDashboard() {
                         </td>
 
                         <td>
-                          {order.payment_status ||
-                            "unpaid"}
+                          {
+                            order.payment_status ||
+                            "unpaid"
+                          }
                         </td>
 
                         <td>
