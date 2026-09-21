@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 
 const links = [
@@ -17,8 +18,12 @@ function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [activeSection, setActiveSection] = useState("home");
 
+  // =========================================================
+  // ACTIVE SECTION OBSERVER
+  // =========================================================
+
   useEffect(() => {
-    const sections = [
+    const sectionIds = [
       "home",
       "about",
       "profile",
@@ -31,24 +36,35 @@ function Navbar() {
       "certificates",
       "blog",
       "contact",
-    ]
+    ];
+
+    const sections = sectionIds
       .map((id) => document.getElementById(id))
       .filter(Boolean);
 
+    if (sections.length === 0) return undefined;
+
+    const navbar = document.querySelector(".navbar");
+    const navbarHeight = navbar?.offsetHeight || 76;
+
     const observer = new IntersectionObserver(
       (entries) => {
-        const visible = entries
+        const visibleSections = entries
           .filter((entry) => entry.isIntersecting)
-          .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+          .sort(
+            (a, b) =>
+              b.intersectionRatio - a.intersectionRatio
+          );
 
-        if (visible) {
-          setActiveSection(visible.target.id);
+        if (visibleSections.length > 0) {
+          setActiveSection(visibleSections[0].target.id);
         }
       },
       {
-        rootMargin: `-${window.innerWidth <= 800 ? 65 : 76}px 0px -55% 0px`,
+        root: null,
+        rootMargin: `-${navbarHeight}px 0px -45% 0px`,
         threshold: [0.1, 0.25, 0.5, 0.75],
-      },
+      }
     );
 
     sections.forEach((section) => observer.observe(section));
@@ -56,11 +72,21 @@ function Navbar() {
     return () => observer.disconnect();
   }, []);
 
+  // =========================================================
+  // BODY SCROLL LOCK MOBILE
+  // =========================================================
+
   useEffect(() => {
     document.body.classList.toggle("nav-open", menuOpen);
 
-    return () => document.body.classList.remove("nav-open");
+    return () => {
+      document.body.classList.remove("nav-open");
+    };
   }, [menuOpen]);
+
+  // =========================================================
+  // ESCAPE KEY
+  // =========================================================
 
   useEffect(() => {
     const handleKeyDown = (event) => {
@@ -70,38 +96,111 @@ function Navbar() {
     };
 
     window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
   }, []);
 
-  const handleClick = () => setMenuOpen(false);
+  // =========================================================
+  // SCROLL TO SECTION
+  // =========================================================
+
+  const handleNavigation = (event, href) => {
+    event.preventDefault();
+
+    const sectionId = href.substring(1);
+    const target = document.getElementById(sectionId);
+
+    if (!target) {
+      console.warn(
+        `Section dengan ID "${sectionId}" tidak ditemukan.`
+      );
+      setMenuOpen(false);
+      return;
+    }
+
+    const navbar = document.querySelector(".navbar");
+    const navbarHeight = navbar?.getBoundingClientRect().height || 0;
+
+    // Posisi section terhadap dokumen
+    const targetPosition =
+      target.getBoundingClientRect().top +
+      window.scrollY -
+      navbarHeight;
+
+    // Scroll langsung ke section dengan offset navbar
+    window.scrollTo({
+      top: Math.max(0, targetPosition),
+      behavior: "smooth",
+    });
+
+    // Update URL tanpa reload halaman
+    window.history.replaceState(null, "", href);
+
+    // Update active menu langsung
+    setActiveSection(sectionId);
+
+    // Tutup menu mobile
+    setMenuOpen(false);
+  };
+
+  // =========================================================
+  // HOME NAVIGATION
+  // =========================================================
+
+  const handleHomeNavigation = (event) => {
+    event.preventDefault();
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+
+    window.history.replaceState(null, "", "#home");
+
+    setActiveSection("home");
+    setMenuOpen(false);
+  };
+
+  // =========================================================
+  // RENDER
+  // =========================================================
 
   return (
     <header className="navbar">
       <div className="navbar-inner">
+        {/* LOGO */}
         <a
           href="#home"
           className="navbar-logo"
-          onClick={handleClick}
+          onClick={handleHomeNavigation}
           aria-label="Warih Seto Samudra - Beranda"
         >
           WSS<span>.</span>
         </a>
 
+        {/* NAVIGATION */}
         <nav
-          className={`navbar-links ${menuOpen ? "open" : ""}`}
+          className={`navbar-links ${
+            menuOpen ? "open" : ""
+          }`}
           id="main-navigation"
           aria-label="Navigasi utama"
         >
           {links.map((link) => {
-            const sectionId = link.href.slice(1);
+            const sectionId = link.href.substring(1);
+            const isActive = activeSection === sectionId;
 
             return (
               <a
                 key={link.href}
                 href={link.href}
-                className={activeSection === sectionId ? "active" : ""}
-                onClick={handleClick}
-                aria-current={activeSection === sectionId ? "page" : undefined}
+                className={isActive ? "active" : ""}
+                onClick={(event) =>
+                  handleNavigation(event, link.href)
+                }
+                aria-current={isActive ? "page" : undefined}
               >
                 {link.label}
               </a>
@@ -109,18 +208,31 @@ function Navbar() {
           })}
         </nav>
 
-        <div className="navbar-status" aria-hidden="true">
+        {/* STATUS */}
+        <div
+          className="navbar-status"
+          aria-hidden="true"
+        >
           <span />
           <span>PORTFOLIO 2026</span>
         </div>
 
+        {/* MOBILE TOGGLE */}
         <button
-          className={`navbar-toggle ${menuOpen ? "active" : ""}`}
+          className={`navbar-toggle ${
+            menuOpen ? "active" : ""
+          }`}
           type="button"
-          aria-label={menuOpen ? "Tutup navigasi" : "Buka navigasi"}
+          aria-label={
+            menuOpen
+              ? "Tutup navigasi"
+              : "Buka navigasi"
+          }
           aria-expanded={menuOpen}
           aria-controls="main-navigation"
-          onClick={() => setMenuOpen((prev) => !prev)}
+          onClick={() =>
+            setMenuOpen((prev) => !prev)
+          }
         >
           <span />
           <span />
