@@ -20,32 +20,38 @@ const bikeFeatures = [
   {
     icon: LayoutDashboard,
     title: "Dashboard",
-    description: "Menampilkan kumpulan unit sepeda.",
+    description:
+      "Menampilkan kumpulan unit sepeda.",
   },
   {
     icon: Search,
     title: "Search",
-    description: "Membantu menemukan unit berdasarkan informasi yang tersedia.",
+    description:
+      "Membantu menemukan unit berdasarkan informasi yang tersedia.",
   },
   {
     icon: Layers3,
     title: "Component Card",
-    description: "Menampilkan komponen yang digunakan oleh setiap unit.",
+    description:
+      "Menampilkan komponen yang digunakan oleh setiap unit.",
   },
   {
     icon: Database,
     title: "Component Detail",
-    description: "Menampilkan detail komponen yang dipilih.",
+    description:
+      "Menampilkan detail komponen yang dipilih.",
   },
   {
     icon: ImageIcon,
     title: "GIF Visualization",
-    description: "Menampilkan GIF sebagai visualisasi komponen.",
+    description:
+      "Menampilkan GIF sebagai visualisasi komponen.",
   },
   {
     icon: Moon,
     title: "Theme",
-    description: "Mendukung Light Mode dan Dark Mode.",
+    description:
+      "Mendukung Light Mode dan Dark Mode.",
   },
   {
     icon: RefreshCw,
@@ -121,13 +127,17 @@ const fashionTechnologies = [
 
 function Project() {
   return (
-    <section className="project-section" id="project">
-      <div className="section-number project-number">05</div>
+    <section
+      className="project-section"
+      id="project"
+    >
+      <div className="section-number project-number">
+        05
+      </div>
 
-      {/* =====================================================
+      {/* =========================
           PROJECT HEADER
-      ===================================================== */}
-
+      ========================= */}
       <div className="project-header">
         <div>
           <span className="section-label">
@@ -142,21 +152,31 @@ function Project() {
         </div>
 
         <p>
-          Beberapa project yang dibuat selama proses belajar,
-          pengembangan keterampilan, dan pengalaman PKL di bidang
+          Beberapa project yang dibuat
+          selama proses belajar,
+          pengembangan keterampilan,
+          dan pengalaman PKL di bidang
           pengembangan perangkat lunak.
         </p>
       </div>
 
-      {/* =====================================================
+      {/* =========================
           PROJECT 01 — BIKE DASHBOARD
-      ===================================================== */}
-
+      ========================= */}
       <motion.article
         className="project-featured"
-        initial={{ opacity: 0, y: 30 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, amount: 0.15 }}
+        initial={{
+          opacity: 0,
+          y: 30,
+        }}
+        whileInView={{
+          opacity: 1,
+          y: 0,
+        }}
+        viewport={{
+          once: true,
+          amount: 0.15,
+        }}
         transition={{
           duration: 0.7,
           ease: "easeOut",
@@ -184,52 +204,83 @@ function Project() {
           </div>
 
           <h3>
-            Dashboard sebagai Prototype Digitalisasi Informasi
+            Dashboard sebagai Prototype
+            Digitalisasi Informasi
             Komponen.
           </h3>
 
           <p className="project-card-description">
-            Bike Dashboard dibuat untuk mengelola dan menampilkan
-            informasi unit sepeda dan komponen. Pengguna dapat
-            memilih unit, memilih komponen, lalu melihat informasi
-            dan visualisasi yang tersedia.
+            Bike Dashboard dibuat untuk
+            mengelola dan menampilkan
+            informasi unit sepeda dan
+            komponen. Pengguna dapat
+            memilih unit, memilih
+            komponen, lalu melihat
+            informasi dan visualisasi
+            yang tersedia.
           </p>
 
           <div className="component-tags">
-            {bikeComponents.map((item) => (
-              <span key={item}>{item}</span>
-            ))}
+            {bikeComponents.map(
+              (item) => (
+                <span key={item}>
+                  {item}
+                </span>
+              )
+            )}
           </div>
 
           <div className="project-feature-list">
-            {bikeFeatures.map((feature, index) => {
-              const Icon = feature.icon;
+            {bikeFeatures.map(
+              (feature, index) => {
+                const Icon =
+                  feature.icon;
 
-              return (
-                <div
-                  className="project-feature"
-                  key={feature.title}
-                >
-                  <span>
-                    {String(index + 1).padStart(2, "0")}
-                  </span>
+                return (
+                  <div
+                    className="project-feature"
+                    key={
+                      feature.title
+                    }
+                  >
+                    <span>
+                      {String(
+                        index + 1
+                      ).padStart(
+                        2,
+                        "0"
+                      )}
+                    </span>
 
-                  <Icon
-                    size={18}
-                    strokeWidth={1.4}
-                  />
+                    <Icon
+                      size={18}
+                      strokeWidth={1.4}
+                    />
 
-                  <div>
-                    <strong>{feature.title}</strong>
-                    <p>{feature.description}</p>
+                    <div>
+                      <strong>
+                        {
+                          feature.title
+                        }
+                      </strong>
+
+                      <p>
+                        {
+                          feature.description
+                        }
+                      </p>
+                    </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              }
+            )}
           </div>
 
           <div className="project-card-footer">
-            <span>DATA → VISUAL → UNDERSTANDING</span>
+            <span>
+              DATA → VISUAL →
+              UNDERSTANDING
+            </span>
 
             <a
               className="project-demo-link"
@@ -237,17 +288,21 @@ function Project() {
               target="_blank"
               rel="noopener noreferrer"
             >
-              <span>Lihat Demo</span>
-              <ArrowUpRight size={15} />
+              <span>
+                Lihat Demo
+              </span>
+
+              <ArrowUpRight
+                size={15}
+              />
             </a>
           </div>
         </div>
       </motion.article>
 
-      {/* =====================================================
+      {/* =========================
           PROJECT 02 — WS FASHION
-      ===================================================== */}
-
+      ========================= */}
       <motion.article
         className="project-featured project-fashion"
         initial={{
@@ -272,7 +327,8 @@ function Project() {
             src="/ws-fashion.png"
             alt="Tampilan WS Fashion"
             onError={(event) => {
-              event.currentTarget.style.display = "none";
+              event.currentTarget.style.display =
+                "none";
             }}
           />
 
@@ -284,7 +340,9 @@ function Project() {
         <div className="project-featured-content">
           <div className="project-card-top">
             <span>02</span>
-            <span>2026 / PERSONAL PROJECT</span>
+            <span>
+              2026 / PERSONAL PROJECT
+            </span>
           </div>
 
           <div className="project-card-meta">
@@ -292,53 +350,84 @@ function Project() {
           </div>
 
           <h3>
-            WS Fashion — Website Toko Fashion Berbasis React
+            WS Fashion — Website Toko
+            Fashion Berbasis React
             dan Supabase.
           </h3>
 
           <p className="project-card-description">
-            WS Fashion merupakan website toko online yang dibuat
-            untuk menampilkan produk fashion secara modern dan
-            interaktif. Website dilengkapi katalog produk,
-            kategori, keranjang, autentikasi, admin dashboard,
-            penyimpanan gambar, dan checkout melalui WhatsApp.
+            WS Fashion merupakan website
+            toko online yang dibuat untuk
+            menampilkan produk fashion
+            secara modern dan interaktif.
+            Website dilengkapi katalog
+            produk, kategori, keranjang,
+            autentikasi, admin dashboard,
+            penyimpanan gambar, dan
+            checkout melalui WhatsApp.
           </p>
 
           <div className="component-tags">
-            {fashionTechnologies.map((item) => (
-              <span key={item}>{item}</span>
-            ))}
+            {fashionTechnologies.map(
+              (item) => (
+                <span key={item}>
+                  {item}
+                </span>
+              )
+            )}
           </div>
 
           <div className="project-feature-list">
-            {fashionFeatures.map((feature, index) => {
-              const Icon = feature.icon;
+            {fashionFeatures.map(
+              (feature, index) => {
+                const Icon =
+                  feature.icon;
 
-              return (
-                <div
-                  className="project-feature"
-                  key={feature.title}
-                >
-                  <span>
-                    {String(index + 1).padStart(2, "0")}
-                  </span>
+                return (
+                  <div
+                    className="project-feature"
+                    key={
+                      feature.title
+                    }
+                  >
+                    <span>
+                      {String(
+                        index + 1
+                      ).padStart(
+                        2,
+                        "0"
+                      )}
+                    </span>
 
-                  <Icon
-                    size={18}
-                    strokeWidth={1.4}
-                  />
+                    <Icon
+                      size={18}
+                      strokeWidth={1.4}
+                    />
 
-                  <div>
-                    <strong>{feature.title}</strong>
-                    <p>{feature.description}</p>
+                    <div>
+                      <strong>
+                        {
+                          feature.title
+                        }
+                      </strong>
+
+                      <p>
+                        {
+                          feature.description
+                        }
+                      </p>
+                    </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              }
+            )}
           </div>
 
           <div className="project-card-footer">
-            <span>PRODUCT → EXPERIENCE → COMMERCE</span>
+            <span>
+              PRODUCT → EXPERIENCE →
+              COMMERCE
+            </span>
 
             <a
               className="project-demo-link"
@@ -346,43 +435,68 @@ function Project() {
               target="_blank"
               rel="noopener noreferrer"
             >
-              <span>Kunjungi WS Fashion</span>
-              <ArrowUpRight size={15} />
+              <span>
+                Kunjungi WS Fashion
+              </span>
+
+              <ArrowUpRight
+                size={15}
+              />
             </a>
           </div>
         </div>
       </motion.article>
 
-      {/* =====================================================
+      {/* =========================
           PROJECT PURPOSE
-      ===================================================== */}
-
+      ========================= */}
       <div className="project-purpose">
-        <span>PROJECT PURPOSE</span>
+        <span>
+          PROJECT PURPOSE
+        </span>
 
         <div>
           <p>
-            <strong>01 — DIGITALISASI</strong>
-            Mengubah penyajian data dan informasi menjadi sistem
-            berbasis web.
+            <strong>
+              01 — DIGITALISASI
+            </strong>
+
+            Mengubah penyajian data
+            dan informasi menjadi
+            sistem berbasis web.
           </p>
 
           <p>
-            <strong>02 — VISUALISASI</strong>
-            Menggabungkan teks, gambar, GIF, dan antarmuka
-            interaktif.
+            <strong>
+              02 — VISUALISASI
+            </strong>
+
+            Menggabungkan teks,
+            gambar, GIF, dan
+            antarmuka interaktif.
           </p>
 
           <p>
-            <strong>03 — E-COMMERCE</strong>
-            Mengembangkan website toko online dengan katalog,
-            keranjang, dan checkout.
+            <strong>
+              03 — E-COMMERCE
+            </strong>
+
+            Mengembangkan website
+            toko online dengan
+            katalog, keranjang,
+            dan checkout.
           </p>
 
           <p>
-            <strong>04 — REUSABLE SYSTEM</strong>
-            Menerapkan teknologi web yang dapat dikembangkan
-            untuk kebutuhan project berikutnya.
+            <strong>
+              04 — REUSABLE SYSTEM
+            </strong>
+
+            Menerapkan teknologi
+            web yang dapat
+            dikembangkan untuk
+            kebutuhan project
+            berikutnya.
           </p>
         </div>
       </div>

@@ -1,7 +1,8 @@
 /* =========================================================
    WARIH SETO SAMUDRA - PORTFOLIO
-   APP.CSS - COMPLETE FINAL VERSION
+   APP.CSS - COMPLETE
 ========================================================= */
+
 
 /* =========================================================
    1. VARIABLES
@@ -27,6 +28,7 @@
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
+
 /* =========================================================
    2. RESET & GLOBAL
 ========================================================= */
@@ -40,8 +42,10 @@
 html {
   width: 100%;
   min-height: 100%;
+
   scroll-behavior: smooth;
   scroll-padding-top: var(--nav-height);
+
   overflow-x: hidden;
 }
 
@@ -49,6 +53,7 @@ body {
   width: 100%;
   min-width: 0;
   min-height: 100%;
+
   margin: 0;
   padding: 0;
 
@@ -121,6 +126,11 @@ main {
   overflow-x: clip;
 }
 
+::selection {
+  background: var(--black);
+  color: var(--white);
+}
+
 section {
   width: 100%;
   max-width: 100%;
@@ -131,10 +141,6 @@ section {
   overflow: visible;
 }
 
-::selection {
-  background: var(--black);
-  color: var(--white);
-}
 
 /* =========================================================
    3. NAVBAR
@@ -142,9 +148,10 @@ section {
 
 .navbar {
   position: fixed;
-  z-index: 1000;
 
   inset: 0 0 auto;
+
+  z-index: 1000;
 
   width: 100%;
   height: var(--nav-height);
@@ -166,6 +173,7 @@ section {
   );
 
   height: 100%;
+
   margin: 0 auto;
 
   display: flex;
@@ -174,6 +182,11 @@ section {
   gap: 24px;
 }
 
+
+/* =========================================================
+   LOGO
+========================================================= */
+
 .navbar-logo {
   flex: 0 0 auto;
 
@@ -181,10 +194,12 @@ section {
   align-items: center;
 
   font-family: "Space Grotesk", sans-serif;
+
   font-size: 24px;
   font-weight: 700;
 
   line-height: 1;
+
   letter-spacing: -0.08em;
 
   color: var(--black);
@@ -202,6 +217,11 @@ section {
 .navbar-logo span {
   color: #777;
 }
+
+
+/* =========================================================
+   NAVIGATION
+========================================================= */
 
 .navbar-links {
   display: flex;
@@ -223,46 +243,83 @@ section {
   padding: 8px 0;
 
   font-family: "DM Mono", monospace;
+
   font-size: 9px;
   line-height: 1;
 
   letter-spacing: 0.09em;
+
   text-transform: uppercase;
 
   color: var(--black);
 
   white-space: nowrap;
 
+  opacity: 0.48;
+
   transition:
     opacity 0.25s ease,
-    transform 0.25s ease;
+    transform 0.25s ease,
+    color 0.25s ease;
 }
+
+
+/* =========================================================
+   NAVBAR UNDERLINE
+========================================================= */
 
 .navbar-links a::after {
   content: "";
 
   position: absolute;
-  left: 0;
-  bottom: 2px;
 
-  width: 0;
-  height: 1px;
+  left: 0;
+  bottom: 0;
+
+  width: 100%;
+  height: 2px;
 
   background: var(--black);
 
-  transition: width 0.3s var(--ease);
+  transform: scaleX(0);
+
+  transform-origin: center;
+
+  transition:
+    transform 0.3s var(--ease);
 }
 
-.navbar-links a:hover,
-.navbar-links a.active {
-  opacity: 0.55;
+
+/* HOVER */
+
+.navbar-links a:hover {
+  opacity: 1;
   transform: translateY(-1px);
 }
 
-.navbar-links a:hover::after,
-.navbar-links a.active::after {
-  width: 100%;
+.navbar-links a:hover::after {
+  transform: scaleX(1);
 }
+
+
+/* ACTIVE */
+
+.navbar-links a.active {
+  opacity: 1;
+
+  color: var(--black);
+
+  transform: translateY(-1px);
+}
+
+.navbar-links a.active::after {
+  transform: scaleX(1);
+}
+
+
+/* =========================================================
+   STATUS
+========================================================= */
 
 .navbar-status {
   flex: 0 0 auto;
@@ -273,6 +330,7 @@ section {
   gap: 7px;
 
   font-family: "DM Mono", monospace;
+
   font-size: 7px;
   line-height: 1;
 
@@ -295,6 +353,11 @@ section {
     0 0 0 4px rgba(16, 16, 16, 0.06);
 }
 
+
+/* =========================================================
+   MOBILE TOGGLE
+========================================================= */
+
 .navbar-toggle {
   display: none;
 
@@ -315,6 +378,7 @@ section {
   border: 1px solid var(--line);
 
   background: transparent;
+
   color: var(--black);
 
   transition:
@@ -344,12 +408,17 @@ section {
 }
 
 .navbar-toggle.active span:first-child {
-  transform: translateY(3px) rotate(45deg);
+  transform:
+    translateY(3px)
+    rotate(45deg);
 }
 
 .navbar-toggle.active span:last-child {
-  transform: translateY(-3px) rotate(-45deg);
+  transform:
+    translateY(-3px)
+    rotate(-45deg);
 }
+
 
 /* =========================================================
    4. HERO
@@ -387,6 +456,7 @@ section {
 
 .hero-top {
   display: flex;
+
   align-items: center;
   justify-content: space-between;
 
@@ -395,16 +465,23 @@ section {
 
 .hero-top span {
   font:
-    500 9px/1 "DM Mono",
+    500 9px/1
+    "DM Mono",
     monospace;
 
   letter-spacing: 0.12em;
+
   text-transform: uppercase;
 }
 
 .hero-top span:last-child {
   color: #777;
 }
+
+
+/* =========================================================
+   HERO CONTENT
+========================================================= */
 
 .hero-content {
   flex: 1;
@@ -424,7 +501,8 @@ section {
   margin-bottom: 22px;
 
   font:
-    500 9px/1 "DM Mono",
+    500 9px/1
+    "DM Mono",
     monospace;
 
   letter-spacing: 0.14em;
@@ -435,7 +513,8 @@ section {
 .hero-title h1 {
   margin: 0;
 
-  font-size: clamp(70px, 10vw, 150px);
+  font-size:
+    clamp(70px, 10vw, 150px);
 
   line-height: 0.78;
 
@@ -454,10 +533,16 @@ section {
   margin-top: 34px;
 
   font-size: 14px;
+
   line-height: 1.75;
 
   color: #666;
 }
+
+
+/* =========================================================
+   HERO PHOTO
+========================================================= */
 
 .hero-photo {
   width: min(100%, 360px);
@@ -484,7 +569,9 @@ section {
 
   inset: 12px;
 
-  border: 1px solid rgba(16, 16, 16, 0.12);
+  border:
+    1px solid
+    rgba(16, 16, 16, 0.12);
 
   z-index: 1;
 
@@ -514,7 +601,8 @@ section {
   margin-top: 10px;
 
   font:
-    400 8px/1.6 "DM Mono",
+    400 8px/1.6
+    "DM Mono",
     monospace;
 
   letter-spacing: 0.08em;
@@ -523,6 +611,11 @@ section {
 
   color: #777;
 }
+
+
+/* =========================================================
+   HERO BOTTOM
+========================================================= */
 
 .hero-bottom {
   display: grid;
@@ -544,6 +637,7 @@ section {
 
 .hero-bottom > div {
   display: flex;
+
   flex-direction: column;
 
   gap: 3px;
@@ -551,7 +645,8 @@ section {
 
 .hero-bottom span {
   font:
-    400 8px/1.4 "DM Mono",
+    400 8px/1.4
+    "DM Mono",
     monospace;
 
   letter-spacing: 0.08em;
@@ -569,12 +664,14 @@ section {
 .scroll-down,
 .hero-project-link {
   display: inline-flex;
+
   align-items: center;
 
   gap: 8px;
 
   font:
-    400 8px/1 "DM Mono",
+    400 8px/1
+    "DM Mono",
     monospace;
 
   letter-spacing: 0.1em;
@@ -598,12 +695,14 @@ section {
 .hero-contact-link,
 .hero-business-link {
   display: inline-flex;
+
   align-items: center;
 
   gap: 8px;
 
   font:
-    500 8px/1 "DM Mono",
+    500 8px/1
+    "DM Mono",
     monospace;
 
   letter-spacing: 0.1em;
@@ -639,6 +738,7 @@ section {
   transform: translateY(-2px);
 }
 
+
 /* =========================================================
    5. SHARED EDITORIAL
 ========================================================= */
@@ -662,13 +762,11 @@ section {
 .editorial-section.light,
 .contact-section {
   background: var(--white);
-
   color: var(--black);
 }
 
 .editorial-section.dark {
   background: var(--black);
-
   color: var(--white);
 }
 
@@ -676,10 +774,13 @@ section {
   position: absolute;
 
   top: 62px;
-  left: clamp(20px, 5vw, 72px);
+
+  left:
+    clamp(20px, 5vw, 72px);
 
   font:
-    500 8px/1 "DM Mono",
+    500 8px/1
+    "DM Mono",
     monospace;
 
   letter-spacing: 0.14em;
@@ -690,7 +791,8 @@ section {
 .section-heading {
   width: min(100%, var(--max));
 
-  margin: 0 auto 60px;
+  margin:
+    0 auto 60px;
 }
 
 .section-heading p,
@@ -698,7 +800,8 @@ section {
   margin-bottom: 16px;
 
   font:
-    500 9px/1 "DM Mono",
+    500 9px/1
+    "DM Mono",
     monospace;
 
   letter-spacing: 0.14em;
@@ -709,7 +812,8 @@ section {
 }
 
 .section-heading h2 {
-  font-size: clamp(54px, 7vw, 100px);
+  font-size:
+    clamp(54px, 7vw, 100px);
 
   line-height: 0.88;
 
@@ -721,6 +825,7 @@ section {
 .section-heading h2 em {
   font-weight: 400;
 }
+
 
 /* =========================================================
    6. ABOUT
@@ -759,7 +864,8 @@ section {
 }
 
 .about-content .large-text {
-  font-size: clamp(21px, 2.4vw, 31px);
+  font-size:
+    clamp(21px, 2.4vw, 31px);
 
   line-height: 1.35;
 
@@ -781,15 +887,19 @@ section {
 
 .about-highlight {
   display: flex;
+
   align-items: flex-start;
 
   gap: 14px;
 
   padding: 20px;
 
-  border: 1px solid rgba(0, 0, 0, 0.12);
+  border:
+    1px solid
+    rgba(0, 0, 0, 0.12);
 
-  background: rgba(255, 255, 255, 0.6);
+  background:
+    rgba(255, 255, 255, 0.6);
 }
 
 .about-highlight svg {
@@ -800,6 +910,7 @@ section {
 
 .about-highlight div {
   display: flex;
+
   flex-direction: column;
 
   gap: 6px;
@@ -821,6 +932,7 @@ section {
   line-height: 1.5;
 }
 
+
 /* =========================================================
    7. PROJECT
 ========================================================= */
@@ -838,7 +950,8 @@ section {
 .project-header {
   width: min(100%, var(--max));
 
-  margin: 0 auto 70px;
+  margin:
+    0 auto 70px;
 
   display: grid;
 
@@ -856,7 +969,8 @@ section {
 }
 
 .project-header h2 {
-  font-size: clamp(60px, 8vw, 115px);
+  font-size:
+    clamp(60px, 8vw, 115px);
 
   line-height: 0.78;
 
@@ -877,7 +991,10 @@ section {
   line-height: 1.85;
 }
 
-/* PROJECT CARD */
+
+/* =========================================================
+   PROJECT CARD
+========================================================= */
 
 .project-featured {
   width: min(100%, var(--max));
@@ -890,7 +1007,9 @@ section {
     minmax(0, 1fr)
     minmax(0, 1fr);
 
-  border: 1px solid rgba(244, 243, 239, 0.15);
+  border:
+    1px solid
+    rgba(244, 243, 239, 0.15);
 
   background: #111;
 }
@@ -899,7 +1018,10 @@ section {
   margin-top: 55px;
 }
 
-/* PROJECT IMAGE */
+
+/* =========================================================
+   PROJECT IMAGE
+========================================================= */
 
 .project-visual {
   position: relative;
@@ -909,6 +1031,7 @@ section {
   display: flex;
 
   align-items: center;
+
   justify-content: center;
 
   padding: 35px;
@@ -929,13 +1052,16 @@ section {
 
   object-fit: contain;
 
-  border: 1px solid rgba(244, 243, 239, 0.12);
+  border:
+    1px solid
+    rgba(244, 243, 239, 0.12);
 
   transition:
     transform 0.7s var(--ease);
 }
 
-.project-featured:hover .project-visual img {
+.project-featured:hover
+.project-visual img {
   transform: scale(1.025);
 }
 
@@ -947,16 +1073,23 @@ section {
 
   padding: 7px 9px;
 
-  background: rgba(16, 16, 16, 0.78);
+  background:
+    rgba(16, 16, 16, 0.78);
 
   font:
-    500 7px/1 "DM Mono",
+    500 7px/1
+    "DM Mono",
     monospace;
 
   letter-spacing: 0.12em;
+
+  color: var(--white);
 }
 
-/* PROJECT CONTENT */
+
+/* =========================================================
+   PROJECT CONTENT
+========================================================= */
 
 .project-featured-content {
   min-width: 0;
@@ -973,10 +1106,13 @@ section {
 
   padding-bottom: 18px;
 
-  border-bottom: 1px solid rgba(244, 243, 239, 0.12);
+  border-bottom:
+    1px solid
+    rgba(244, 243, 239, 0.12);
 
   font:
-    500 8px/1 "DM Mono",
+    500 8px/1
+    "DM Mono",
     monospace;
 
   letter-spacing: 0.12em;
@@ -988,7 +1124,8 @@ section {
   margin-top: 30px;
 
   font:
-    500 8px/1.4 "DM Mono",
+    500 8px/1.4
+    "DM Mono",
     monospace;
 
   letter-spacing: 0.13em;
@@ -1001,7 +1138,8 @@ section {
 
   max-width: 650px;
 
-  font-size: clamp(30px, 3.6vw, 54px);
+  font-size:
+    clamp(30px, 3.6vw, 54px);
 
   line-height: 1;
 
@@ -1020,7 +1158,10 @@ section {
   line-height: 1.8;
 }
 
-/* PROJECT TAGS */
+
+/* =========================================================
+   PROJECT TAGS
+========================================================= */
 
 .component-tags {
   display: flex;
@@ -1035,10 +1176,13 @@ section {
 .component-tags span {
   padding: 6px 8px;
 
-  border: 1px solid rgba(244, 243, 239, 0.14);
+  border:
+    1px solid
+    rgba(244, 243, 239, 0.14);
 
   font:
-    500 7px/1 "DM Mono",
+    500 7px/1
+    "DM Mono",
     monospace;
 
   letter-spacing: 0.1em;
@@ -1046,12 +1190,17 @@ section {
   color: #aaa;
 }
 
-/* PROJECT FEATURE LIST */
+
+/* =========================================================
+   PROJECT FEATURE LIST
+========================================================= */
 
 .project-feature-list {
   margin-top: 28px;
 
-  border-top: 1px solid rgba(244, 243, 239, 0.12);
+  border-top:
+    1px solid
+    rgba(244, 243, 239, 0.12);
 }
 
 .project-feature {
@@ -1068,12 +1217,15 @@ section {
 
   padding: 14px 0;
 
-  border-bottom: 1px solid rgba(244, 243, 239, 0.1);
+  border-bottom:
+    1px solid
+    rgba(244, 243, 239, 0.1);
 }
 
 .project-feature > span {
   font:
-    500 7px/1.5 "DM Mono",
+    500 7px/1.5
+    "DM Mono",
     monospace;
 
   color: #777;
@@ -1101,7 +1253,10 @@ section {
   line-height: 1.55;
 }
 
-/* PROJECT FOOTER */
+
+/* =========================================================
+   PROJECT FOOTER
+========================================================= */
 
 .project-card-footer {
   display: flex;
@@ -1116,10 +1271,13 @@ section {
 
   padding-top: 18px;
 
-  border-top: 1px solid rgba(244, 243, 239, 0.12);
+  border-top:
+    1px solid
+    rgba(244, 243, 239, 0.12);
 
   font:
-    500 7px/1 "DM Mono",
+    500 7px/1
+    "DM Mono",
     monospace;
 
   letter-spacing: 0.12em;
@@ -1127,7 +1285,10 @@ section {
   color: #888;
 }
 
-/* DEMO BUTTON */
+
+/* =========================================================
+   DEMO BUTTON
+========================================================= */
 
 .project-demo-link {
   display: inline-flex;
@@ -1142,12 +1303,15 @@ section {
 
   padding: 10px 13px;
 
-  border: 1px solid rgba(244, 243, 239, 0.28);
+  border:
+    1px solid
+    rgba(244, 243, 239, 0.28);
 
   color: var(--white);
 
   font:
-    500 8px/1 "DM Mono",
+    500 8px/1
+    "DM Mono",
     monospace;
 
   letter-spacing: 0.1em;
@@ -1179,36 +1343,44 @@ section {
 }
 
 .project-demo-link:hover svg {
-  transform: translate(2px, -2px);
+  transform:
+    translate(2px, -2px);
 }
-
-/* PROJECT 02 */
 
 .project-fashion {
   background: #111;
 }
 
-/* PROJECT PURPOSE */
+
+/* =========================================================
+   PROJECT PURPOSE
+========================================================= */
 
 .project-purpose {
   width: min(100%, var(--max));
 
-  margin: 70px auto 0;
+  margin:
+    70px auto 0;
 
   display: grid;
 
-  grid-template-columns: 220px 1fr;
+  grid-template-columns:
+    220px
+    1fr;
 
   gap: 45px;
 
   padding-top: 25px;
 
-  border-top: 1px solid rgba(244, 243, 239, 0.12);
+  border-top:
+    1px solid
+    rgba(244, 243, 239, 0.12);
 }
 
 .project-purpose > span {
   font:
-    500 8px/1 "DM Mono",
+    500 8px/1
+    "DM Mono",
     monospace;
 
   letter-spacing: 0.13em;
@@ -1242,11 +1414,13 @@ section {
   color: #eee;
 
   font:
-    500 8px/1 "DM Mono",
+    500 8px/1
+    "DM Mono",
     monospace;
 
   letter-spacing: 0.12em;
 }
+
 
 /* =========================================================
    8. TECHNOLOGY
@@ -1306,7 +1480,8 @@ section {
 
 .tech-item-top > span {
   font:
-    500 8px/1 "DM Mono",
+    500 8px/1
+    "DM Mono",
     monospace;
 
   color: #999;
@@ -1314,7 +1489,8 @@ section {
 
 .tech-item-top small {
   font:
-    500 7px/1.3 "DM Mono",
+    500 7px/1.3
+    "DM Mono",
     monospace;
 
   letter-spacing: 0.1em;
@@ -1323,7 +1499,8 @@ section {
 }
 
 .tech-item h3 {
-  font-size: clamp(27px, 3vw, 42px);
+  font-size:
+    clamp(27px, 3vw, 42px);
 
   line-height: 1;
 
@@ -1344,7 +1521,10 @@ section {
   display: none;
 }
 
-/* SKILLS SUMMARY */
+
+/* =========================================================
+   SKILLS SUMMARY
+========================================================= */
 
 .skills-summary {
   display: grid;
@@ -1374,7 +1554,8 @@ section {
 
 .skills-summary span {
   font:
-    500 8px/1 "DM Mono",
+    500 8px/1
+    "DM Mono",
     monospace;
 
   color: #999;
@@ -1382,7 +1563,8 @@ section {
 
 .skills-summary strong {
   font:
-    500 8px/1.4 "DM Mono",
+    500 8px/1.4
+    "DM Mono",
     monospace;
 
   letter-spacing: 0.1em;
@@ -1398,7 +1580,10 @@ section {
   line-height: 1.7;
 }
 
-/* SKILLS GRID */
+
+/* =========================================================
+   SKILLS GRID
+========================================================= */
 
 .skills-grid {
   width: min(100%, var(--max));
@@ -1452,7 +1637,8 @@ section {
 .skill-card-top span,
 .skill-card-top small {
   font:
-    500 7px/1.3 "DM Mono",
+    500 7px/1.3
+    "DM Mono",
     monospace;
 
   letter-spacing: 0.1em;
@@ -1467,9 +1653,11 @@ section {
   align-items: center;
   justify-content: center;
 
-  margin: 28px 0 22px;
+  margin:
+    28px 0 22px;
 
-  border: 1px solid var(--line);
+  border:
+    1px solid var(--line);
 
   border-radius: 50%;
 }
@@ -1494,7 +1682,8 @@ section {
   padding-top: 25px;
 
   font:
-    500 8px/1.2 "DM Mono",
+    500 8px/1.2
+    "DM Mono",
     monospace;
 
   color: #777;
@@ -1521,6 +1710,7 @@ section {
 
   background: var(--black);
 }
+
 
 /* =========================================================
    9. LEARNING / EDUCATION
@@ -1578,14 +1768,16 @@ section {
 
 .learning-number {
   font:
-    500 8px/1 "DM Mono",
+    500 8px/1
+    "DM Mono",
     monospace;
 
   color: #999;
 }
 
 .learning-item-main h3 {
-  font-size: clamp(23px, 3vw, 37px);
+  font-size:
+    clamp(23px, 3vw, 37px);
 
   line-height: 1;
 
@@ -1613,16 +1805,23 @@ section {
     transform 0.3s var(--ease);
 }
 
-.learning-item:hover .learning-arrow {
-  transform: translate(3px, -3px);
+.learning-item:hover
+.learning-arrow {
+  transform:
+    translate(3px, -3px);
 }
 
-/* LANGUAGE */
+
+/* =========================================================
+   LANGUAGE
+========================================================= */
 
 .language-block {
   display: grid;
 
-  grid-template-columns: 220px 1fr;
+  grid-template-columns:
+    220px
+    1fr;
 
   gap: 45px;
 
@@ -1644,7 +1843,8 @@ section {
 .language-heading span,
 .language-heading p {
   font:
-    500 8px/1 "DM Mono",
+    500 8px/1
+    "DM Mono",
     monospace;
 
   letter-spacing: 0.12em;
@@ -1662,7 +1862,8 @@ section {
   margin-right: 15px;
 
   font:
-    500 8px/1 "DM Mono",
+    500 8px/1
+    "DM Mono",
     monospace;
 
   color: #999;
@@ -1673,6 +1874,7 @@ section {
 
   font-weight: 600;
 }
+
 
 /* =========================================================
    10. CONTACT
@@ -1743,7 +1945,8 @@ a.contact-item:hover {
   align-items: center;
   justify-content: center;
 
-  border: 1px solid var(--line);
+  border:
+    1px solid var(--line);
 
   border-radius: 50%;
 }
@@ -1760,7 +1963,8 @@ a.contact-item:hover {
   margin-bottom: 7px;
 
   font:
-    500 8px/1 "DM Mono",
+    500 8px/1
+    "DM Mono",
     monospace;
 
   letter-spacing: 0.12em;
@@ -1793,11 +1997,16 @@ a.contact-item:hover {
     transform 0.3s var(--ease);
 }
 
-.contact-item:hover .contact-arrow {
-  transform: translate(3px, -3px);
+.contact-item:hover
+.contact-arrow {
+  transform:
+    translate(3px, -3px);
 }
 
-/* CONTACT NOTE */
+
+/* =========================================================
+   CONTACT NOTE
+========================================================= */
 
 .contact-note {
   display: grid;
@@ -1817,7 +2026,8 @@ a.contact-item:hover {
 
 .contact-note-number {
   font:
-    500 8px/1 "DM Mono",
+    500 8px/1
+    "DM Mono",
     monospace;
 
   color: #999;
@@ -1825,7 +2035,8 @@ a.contact-item:hover {
 
 .contact-note-content > span {
   font:
-    500 8px/1 "DM Mono",
+    500 8px/1
+    "DM Mono",
     monospace;
 
   letter-spacing: 0.12em;
@@ -1844,6 +2055,7 @@ a.contact-item:hover {
 
   color: #777;
 }
+
 
 /* =========================================================
    11. FOOTER
@@ -1891,7 +2103,8 @@ a.contact-item:hover {
 .footer-right > span,
 .footer-right a {
   font:
-    500 7px/1.4 "DM Mono",
+    500 7px/1.4
+    "DM Mono",
     monospace;
 
   letter-spacing: 0.1em;
@@ -1935,6 +2148,7 @@ a.contact-item:hover {
   opacity: 0.5;
 }
 
+
 /* =========================================================
    12. GENERAL SECTION FIX
 ========================================================= */
@@ -1971,6 +2185,7 @@ a.contact-item:hover {
   min-width: 0;
 }
 
+
 /* =========================================================
    13. TABLET / SMALL DESKTOP
 ========================================================= */
@@ -1995,7 +2210,8 @@ a.contact-item:hover {
   }
 
   .hero-title h1 {
-    font-size: clamp(65px, 10vw, 120px);
+    font-size:
+      clamp(65px, 10vw, 120px);
   }
 
   .project-featured {
@@ -2018,13 +2234,15 @@ a.contact-item:hover {
   }
 }
 
+
 /* =========================================================
    14. MOBILE NAVBAR / TABLET
 ========================================================= */
 
 @media (max-width: 800px) {
   .navbar-inner {
-    width: calc(100% - 40px);
+    width:
+      calc(100% - 40px);
   }
 
   .navbar-logo {
@@ -2037,6 +2255,9 @@ a.contact-item:hover {
     margin-left: auto;
   }
 
+
+  /* MOBILE MENU */
+
   .navbar-links {
     position: absolute;
 
@@ -2044,7 +2265,8 @@ a.contact-item:hover {
 
     left: 50%;
 
-    transform: translateX(-50%);
+    transform:
+      translateX(-50%);
 
     width: 100vw;
 
@@ -2061,12 +2283,15 @@ a.contact-item:hover {
     padding:
       8px 20px 18px;
 
-    background: rgba(244, 243, 239, 0.98);
+    background:
+      rgba(244, 243, 239, 0.98);
 
-    border-bottom: 1px solid var(--line);
+    border-bottom:
+      1px solid var(--line);
 
     box-shadow:
-      0 18px 30px rgba(16, 16, 16, 0.06);
+      0 18px 30px
+      rgba(16, 16, 16, 0.06);
 
     backdrop-filter: blur(18px);
 
@@ -2084,18 +2309,47 @@ a.contact-item:hover {
 
     padding: 16px 0;
 
-    border-bottom: 1px solid var(--line);
+    border-bottom:
+      1px solid var(--line);
 
     font-size: 9px;
+
+    opacity: 0.48;
   }
 
   .navbar-links a:last-child {
     border-bottom: 0;
   }
 
+
+  /* MOBILE ACTIVE */
+
   .navbar-links a::after {
-    display: none;
+    left: auto;
+
+    right: 0;
+
+    bottom: 15px;
+
+    width: 25px;
+
+    height: 2px;
+
+    transform:
+      scaleX(0);
+
+    transform-origin:
+      right center;
+
+    background: var(--black);
   }
+
+  .navbar-links a:hover::after,
+  .navbar-links a.active::after {
+    transform:
+      scaleX(1);
+  }
+
 
   /* HERO */
 
@@ -2118,7 +2372,8 @@ a.contact-item:hover {
   }
 
   .hero-title h1 {
-    font-size: clamp(55px, 16vw, 90px);
+    font-size:
+      clamp(55px, 16vw, 90px);
 
     line-height: 0.82;
   }
@@ -2130,7 +2385,8 @@ a.contact-item:hover {
   }
 
   .hero-photo {
-    width: min(270px, 72vw);
+    width:
+      min(270px, 72vw);
 
     justify-self: start;
   }
@@ -2149,6 +2405,7 @@ a.contact-item:hover {
   .hero-project-link {
     justify-self: start;
   }
+
 
   /* SHARED */
 
@@ -2170,7 +2427,8 @@ a.contact-item:hover {
   }
 
   .section-heading h2 {
-    font-size: clamp(48px, 12vw, 78px);
+    font-size:
+      clamp(48px, 12vw, 78px);
   }
 
   .about-content,
@@ -2183,6 +2441,7 @@ a.contact-item:hover {
   .about-content .large-text {
     font-size: 23px;
   }
+
 
   /* ABOUT */
 
@@ -2201,6 +2460,7 @@ a.contact-item:hover {
   .about-highlight strong {
     font-size: 13px;
   }
+
 
   /* PROJECT */
 
@@ -2255,6 +2515,7 @@ a.contact-item:hover {
   .project-demo-link {
     width: 100%;
   }
+
 
   /* TECHNOLOGY */
 
@@ -2312,6 +2573,7 @@ a.contact-item:hover {
     gap: 20px;
   }
 
+
   /* CONTACT */
 
   .contact-grid {
@@ -2325,6 +2587,7 @@ a.contact-item:hover {
 
     gap: 12px;
   }
+
 
   /* FOOTER */
 
@@ -2351,6 +2614,7 @@ a.contact-item:hover {
   }
 }
 
+
 /* =========================================================
    15. SMALL MOBILE
 ========================================================= */
@@ -2361,7 +2625,8 @@ a.contact-item:hover {
   }
 
   .navbar-inner {
-    width: calc(100% - 40px);
+    width:
+      calc(100% - 40px);
   }
 
   .navbar-logo {
@@ -2370,11 +2635,11 @@ a.contact-item:hover {
 
   .navbar-toggle {
     width: 36px;
-
     height: 36px;
 
     flex-basis: 36px;
   }
+
 
   /* HERO */
 
@@ -2385,21 +2650,25 @@ a.contact-item:hover {
   }
 
   .hero-title h1 {
-    font-size: clamp(50px, 16.8vw, 82px);
+    font-size:
+      clamp(50px, 16.8vw, 82px);
   }
 
   .hero-photo {
-    width: min(235px, 68vw);
+    width:
+      min(235px, 68vw);
   }
 
   .hero-bottom {
     grid-template-columns: 1fr;
   }
 
+
   /* PROJECT */
 
   .project-header h2 {
-    font-size: clamp(50px, 15vw, 76px);
+    font-size:
+      clamp(50px, 15vw, 76px);
   }
 
   .project-featured-content {
@@ -2446,6 +2715,7 @@ a.contact-item:hover {
     grid-template-columns: 1fr;
   }
 
+
   /* CONTACT */
 
   .contact-item {
@@ -2457,7 +2727,6 @@ a.contact-item:hover {
 
   .contact-icon {
     width: 36px;
-
     height: 36px;
 
     flex-basis: 36px;
@@ -2466,6 +2735,7 @@ a.contact-item:hover {
   .contact-item-content strong {
     font-size: 14px;
   }
+
 
   /* FOOTER */
 
@@ -2488,8 +2758,9 @@ a.contact-item:hover {
   }
 }
 
+
 /* =========================================================
-   16. ACCESSIBILITY / REDUCED MOTION
+   16. ACCESSIBILITY
 ========================================================= */
 
 @media (prefers-reduced-motion: reduce) {
