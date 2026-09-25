@@ -2,6 +2,9 @@ import { useEffect, useMemo, useState } from "react";
 
 import {
   CalendarDays,
+  BarChart3,
+  TrendingUp,
+  CalendarRange,
   FileDown,
   ImagePlus,
   LogOut,
@@ -315,6 +318,13 @@ export default function AdminDashboard() {
 
   const [exportingPDF, setExportingPDF] =
     useState(false);
+
+  /* ORDER MANAGEMENT FILTER */
+
+  const [orderFilter, setOrderFilter] = useState("all");
+  const [orderStartDate, setOrderStartDate] = useState("");
+  const [orderEndDate, setOrderEndDate] = useState("");
+  const [orderStatusFilter, setOrderStatusFilter] = useState("all");
 
   /* ORDER DETAIL */
 
@@ -1704,6 +1714,156 @@ export default function AdminDashboard() {
   ]);
 
   /* =======================================================
+     ADMIN DASHBOARD CHART DATA
+  ======================================================= */
+
+  const monthlySales = useMemo(() => {
+    const now = new Date();
+    const months = [];
+
+    for (let i = 5; i >= 0; i -= 1) {
+      const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      months.push({
+        key: `${date.getFullYear()}-${date.getMonth()}`,
+        label: date.toLocaleDateString("id-ID", { month: "short" }),
+        orders: 0,
+        revenue: 0,
+      });
+    }
+
+    orders.forEach((order) => {
+      if (!order.created_at) return;
+      const date = new Date(order.created_at);
+      const month = months.find(
+        (item) =>
+          item.key === `${date.getFullYear()}-${date.getMonth()}`
+      );
+
+      if (month) {
+        month.orders += 1;
+        month.revenue += getOrderTotal(order);
+      }
+    });
+
+    return months;
+  }, [orders]);
+
+  const chartMaxRevenue = useMemo(
+    () => Math.max(...monthlySales.map((item) => item.revenue), 1),
+    [monthlySales]
+  );
+
+  const dashboardStatusStats = useMemo(() => {
+    const result = {
+      pending: 0,
+      processing: 0,
+      paid: 0,
+      shipped: 0,
+      completed: 0,
+      cancelled: 0,
+    };
+
+    orders.forEach((order) => {
+      const status = String(getOrderStatus(order)).toLowerCase().trim();
+      if (Object.prototype.hasOwnProperty.call(result, status)) {
+        result[status] += 1;
+      }
+    });
+
+    return result;
+  }, [orders]);
+
+  /* =======================================================
+     ORDER MANAGEMENT FILTER
+  ======================================================= */
+
+  const orderManagementFilteredOrders = useMemo(() => {
+    const now = new Date();
+
+    return orders.filter((order) => {
+      if (!order.created_at) {
+        return orderFilter === "all" && orderStatusFilter === "all";
+      }
+
+      const date = new Date(order.created_at);
+
+      if (orderFilter === "today") {
+        if (
+          date.getFullYear() !== now.getFullYear() ||
+          date.getMonth() !== now.getMonth() ||
+          date.getDate() !== now.getDate()
+        ) return false;
+      }
+
+      if (orderFilter === "7days") {
+        const start = new Date(now);
+        start.setHours(0, 0, 0, 0);
+        start.setDate(start.getDate() - 6);
+        if (date < start || date > now) return false;
+      }
+
+      if (orderFilter === "30days") {
+        const start = new Date(now);
+        start.setHours(0, 0, 0, 0);
+        start.setDate(start.getDate() - 29);
+        if (date < start || date > now) return false;
+      }
+
+      if (orderFilter === "month") {
+        if (
+          date.getFullYear() !== now.getFullYear() ||
+          date.getMonth() !== now.getMonth()
+        ) return false;
+      }
+
+      if (orderFilter === "year" && date.getFullYear() !== now.getFullYear()) {
+        return false;
+      }
+
+      if (orderFilter === "custom") {
+        if (orderStartDate) {
+          const start = new Date(`${orderStartDate}T00:00:00`);
+          if (date < start) return false;
+        }
+
+        if (orderEndDate) {
+          const end = new Date(`${orderEndDate}T23:59:59.999`);
+          if (date > end) return false;
+        }
+      }
+
+      if (
+        orderStatusFilter !== "all" &&
+        String(getOrderStatus(order)).toLowerCase() !==
+          orderStatusFilter.toLowerCase()
+      ) return false;
+
+      return true;
+    });
+  }, [
+    orders,
+    orderFilter,
+    orderStartDate,
+    orderEndDate,
+    orderStatusFilter,
+  ]);
+
+  const orderManagementStats = useMemo(() => {
+    const revenue = orderManagementFilteredOrders.reduce(
+      (sum, order) => sum + getOrderTotal(order),
+      0
+    );
+
+    return {
+      total: orderManagementFilteredOrders.length,
+      revenue,
+      average: orderManagementFilteredOrders.length
+        ? revenue / orderManagementFilteredOrders.length
+        : 0,
+    };
+  }, [orderManagementFilteredOrders]);
+
+  /* =======================================================
      REPORT FILTER
   ======================================================= */
 
@@ -2315,6 +2475,86 @@ export default function AdminDashboard() {
                   stats.totalRevenue
                 )}
               </strong>
+            </div>
+          </div>
+        </section>
+
+        {/* =================================================
+            DASHBOARD CHARTS
+        ================================================= */}
+
+        <section className="admin-dashboard-analytics">
+          <div className="analytics-card admin-card">
+            <div className="card-title">
+              <div>
+                <h3>Grafik Penjualan</h3>
+                <p>Revenue 6 bulan terakhir berdasarkan data order.</p>
+              </div>
+              <TrendingUp size={20} />
+            </div>
+
+            <div className="sales-chart">
+              <div className="sales-chart-bars">
+                {monthlySales.map((item) => (
+                  <div className="sales-chart-column" key={item.key}>
+                    <div className="sales-chart-value">
+                      {item.revenue > 0 ? formatRupiah(item.revenue) : "Rp0"}
+                    </div>
+                    <div
+                      className="sales-chart-bar"
+                      style={{
+                        height: `${Math.max(
+                          item.revenue > 0
+                            ? (item.revenue / chartMaxRevenue) * 100
+                            : 3,
+                          3
+                        )}%`,
+                      }}
+                      title={`${item.label}: ${formatRupiah(item.revenue)}`}
+                    />
+                    <span>{item.label}</span>
+                    <small>{item.orders} order</small>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="analytics-card admin-card">
+            <div className="card-title">
+              <div>
+                <h3>Status Order</h3>
+                <p>Distribusi status seluruh order.</p>
+              </div>
+              <BarChart3 size={20} />
+            </div>
+
+            <div className="status-stat-list">
+              {[
+                ["pending", "Pending"],
+                ["processing", "Processing"],
+                ["paid", "Paid"],
+                ["shipped", "Shipped"],
+                ["completed", "Completed"],
+                ["cancelled", "Cancelled"],
+              ].map(([key, label]) => (
+                <div className="status-stat-row" key={key}>
+                  <span>{label}</span>
+                  <div className="status-stat-track">
+                    <div
+                      className="status-stat-fill"
+                      style={{
+                        width: `${
+                          orders.length
+                            ? (dashboardStatusStats[key] / orders.length) * 100
+                            : 0
+                        }%`,
+                      }}
+                    />
+                  </div>
+                  <strong>{dashboardStatusStats[key]}</strong>
+                </div>
+              ))}
             </div>
           </div>
         </section>
@@ -3164,6 +3404,63 @@ export default function AdminDashboard() {
               </div>
             </div>
 
+            <div className="order-filter-panel admin-card">
+              <div className="order-filter-heading">
+                <div>
+                  <h3>Filter Order</h3>
+                  <p>Filter transaksi berdasarkan periode dan status.</p>
+                </div>
+                <CalendarRange size={20} />
+              </div>
+
+              <div className="order-filter-grid">
+                <label>
+                  <span>Periode</span>
+                  <select value={orderFilter} onChange={(event) => setOrderFilter(event.target.value)}>
+                    <option value="all">Semua</option>
+                    <option value="today">Hari Ini</option>
+                    <option value="7days">7 Hari Terakhir</option>
+                    <option value="30days">30 Hari Terakhir</option>
+                    <option value="month">Bulan Ini</option>
+                    <option value="year">Tahun Ini</option>
+                    <option value="custom">Custom</option>
+                  </select>
+                </label>
+
+                <label>
+                  <span>Status Order</span>
+                  <select value={orderStatusFilter} onChange={(event) => setOrderStatusFilter(event.target.value)}>
+                    <option value="all">Semua Status</option>
+                    <option value="pending">Pending</option>
+                    <option value="processing">Processing</option>
+                    <option value="paid">Paid</option>
+                    <option value="shipped">Shipped</option>
+                    <option value="completed">Completed</option>
+                    <option value="cancelled">Cancelled</option>
+                  </select>
+                </label>
+
+                {orderFilter === "custom" && (
+                  <>
+                    <label>
+                      <span>Tanggal Mulai</span>
+                      <input type="date" value={orderStartDate} onChange={(event) => setOrderStartDate(event.target.value)} />
+                    </label>
+                    <label>
+                      <span>Tanggal Akhir</span>
+                      <input type="date" value={orderEndDate} min={orderStartDate || undefined} onChange={(event) => setOrderEndDate(event.target.value)} />
+                    </label>
+                  </>
+                )}
+              </div>
+
+              <div className="order-filter-summary">
+                <span>Menampilkan <strong>{orderManagementStats.total}</strong> order</span>
+                <span>Revenue <strong>{formatRupiah(orderManagementStats.revenue)}</strong></span>
+                <span>Rata-rata <strong>{formatRupiah(orderManagementStats.average)}</strong></span>
+              </div>
+            </div>
+
             <div className="admin-card">
               <div className="card-title">
                 <div>
@@ -3178,7 +3475,7 @@ export default function AdminDashboard() {
                 </div>
               </div>
 
-              {orders.length ===
+              {orderManagementFilteredOrders.length ===
               0 ? (
                 <div className="empty-state">
                   <ShoppingBag
@@ -3186,7 +3483,7 @@ export default function AdminDashboard() {
                   />
 
                   <p>
-                    Belum ada order.
+                    Tidak ada order yang sesuai filter.
                   </p>
                 </div>
               ) : (
@@ -3225,7 +3522,7 @@ export default function AdminDashboard() {
                     </thead>
 
                     <tbody>
-                      {orders.map(
+                      {orderManagementFilteredOrders.map(
                         (
                           order
                         ) => (
