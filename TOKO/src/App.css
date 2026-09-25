@@ -3683,3 +3683,11 @@ h2 em {
 [data-theme="dark"] .sales-chart::-webkit-scrollbar-thumb {
   background: #4b5563;
 }
+/* =========================================================
+   RECEIPT / CETAK STRUK
+   ========================================================= */
+
+.receipt-print {
+  display: none;
+}
+

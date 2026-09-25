@@ -1,13 +1,16 @@
 import { useEffect, useMemo, useState } from "react";
+
 import {
   ArrowLeft,
   CheckCircle2,
   CreditCard,
   MapPin,
   Package,
+  Printer,
   ShoppingBag,
   Truck,
 } from "lucide-react";
+
 import { Link, useNavigate } from "react-router-dom";
 
 import { supabase } from "../lib/supabase";
@@ -59,10 +62,7 @@ export default function Checkout() {
         } = await supabase.auth.getUser();
 
         if (userError) {
-          console.warn(
-            "PROFILE USER WARNING:",
-            userError
-          );
+          console.warn("PROFILE USER WARNING:", userError);
           return;
         }
 
@@ -80,10 +80,7 @@ export default function Checkout() {
           .maybeSingle();
 
         if (profileError) {
-          console.warn(
-            "PROFILE LOAD WARNING:",
-            profileError
-          );
+          console.warn("PROFILE LOAD WARNING:", profileError);
           return;
         }
 
@@ -107,10 +104,7 @@ export default function Checkout() {
           }));
         }
       } catch (err) {
-        console.warn(
-          "PROFILE LOAD ERROR:",
-          err
-        );
+        console.warn("PROFILE LOAD ERROR:", err);
       }
     };
 
@@ -160,6 +154,52 @@ export default function Checkout() {
       icon: Package,
     },
   ];
+
+  // =========================================================
+  // PAYMENT LABEL
+  // =========================================================
+
+  const getPaymentLabel = (method) => {
+    switch (method) {
+      case "bank_transfer":
+        return "Transfer Bank";
+
+      case "qris":
+        return "QRIS";
+
+      case "cod":
+        return "COD";
+
+      default:
+        return "-";
+    }
+  };
+
+  // =========================================================
+  // FORMAT TANGGAL STRUK
+  // =========================================================
+
+  const formatReceiptDate = (date) => {
+    try {
+      return new Date(date).toLocaleString(
+        "id-ID",
+        {
+          dateStyle: "medium",
+          timeStyle: "short",
+        }
+      );
+    } catch {
+      return "-";
+    }
+  };
+
+  // =========================================================
+  // CETAK STRUK
+  // =========================================================
+
+  const handlePrintReceipt = () => {
+    window.print();
+  };
 
   // =========================================================
   // FORM CHANGE
@@ -252,7 +292,10 @@ export default function Checkout() {
           }" tidak memiliki ID produk.`;
         }
 
-        if (quantity <= 0) {
+        if (
+          !Number.isInteger(quantity) ||
+          quantity <= 0
+        ) {
           return `Jumlah produk "${
             product.name || "Produk"
           }" tidak valid.`;
@@ -481,34 +524,6 @@ export default function Checkout() {
       setLoading(true);
 
       // -----------------------------------------------------
-      // CEK STOK TERBARU
-      // -----------------------------------------------------
-
-      console.log(
-        "=== CHECKING LATEST STOCK ==="
-      );
-
-      const stockValidationError =
-        await validateStock();
-
-      if (stockValidationError) {
-        console.error(
-          "STOCK VALIDATION ERROR:",
-          stockValidationError
-        );
-
-        setError(
-          stockValidationError
-        );
-
-        return;
-      }
-
-      console.log(
-        "=== STOCK VALIDATION PASSED ==="
-      );
-
-      // -----------------------------------------------------
       // CEK USER
       // -----------------------------------------------------
 
@@ -547,6 +562,34 @@ export default function Checkout() {
       console.log(
         "AUTH USER ID:",
         user.id
+      );
+
+      // -----------------------------------------------------
+      // CEK STOK TERBARU
+      // -----------------------------------------------------
+
+      console.log(
+        "=== CHECKING LATEST STOCK ==="
+      );
+
+      const stockValidationError =
+        await validateStock();
+
+      if (stockValidationError) {
+        console.error(
+          "STOCK VALIDATION ERROR:",
+          stockValidationError
+        );
+
+        setError(
+          stockValidationError
+        );
+
+        return;
+      }
+
+      console.log(
+        "=== STOCK VALIDATION PASSED ==="
       );
 
       // -----------------------------------------------------
@@ -829,6 +872,57 @@ export default function Checkout() {
       }
 
       // -----------------------------------------------------
+      // SIMPAN DATA STRUK SEBELUM CART DIHAPUS
+      // -----------------------------------------------------
+
+      const receiptItems =
+        cartItems.map((item, index) => {
+          const product =
+            item.product || item;
+
+          const price = Number(
+            item.price ??
+              product.price ??
+              0
+          );
+
+          const quantity = Number(
+            item.quantity ??
+              item.qty ??
+              1
+          );
+
+          const selectedSize =
+            item.selected_size ??
+            item.size ??
+            null;
+
+          const selectedColor =
+            item.selected_color ??
+            item.color ??
+            null;
+
+          return {
+            id:
+              product.id ??
+              item.id ??
+              index,
+
+            productName:
+              product.name ||
+              "Produk",
+
+            price,
+
+            quantity,
+
+            selectedSize,
+
+            selectedColor,
+          };
+        });
+
+      // -----------------------------------------------------
       // CLEAR CART
       // -----------------------------------------------------
 
@@ -879,12 +973,46 @@ export default function Checkout() {
         id: createdOrder.id,
 
         orderNumber:
-          createdOrder.order_number,
+          createdOrder.order_number ||
+          orderNumber,
 
         paymentMethod,
 
+        paymentStatus:
+          initialPaymentStatus,
+
+        status:
+          initialStatus,
+
+        subtotal,
+
+        shippingCost,
+
         total,
+
+        customer: {
+          name:
+            form.name.trim(),
+
+          phone:
+            form.phone.trim(),
+
+          address:
+            form.address.trim(),
+
+          notes:
+            form.notes.trim() ||
+            "",
+        },
+
+        items:
+          receiptItems,
+
+        createdAt:
+          createdOrder.created_at ||
+          new Date().toISOString(),
       });
+
     } catch (err) {
       console.error(
         "========================================"
@@ -894,9 +1022,7 @@ export default function Checkout() {
         "=== CHECKOUT ERROR ==="
       );
 
-      console.error(
-        err
-      );
+      console.error(err);
 
       console.error(
         "MESSAGE:",
@@ -1007,19 +1133,180 @@ export default function Checkout() {
       }
 
       setError(message);
+
     } finally {
       setLoading(false);
     }
   };
 
   // =========================================================
-  // SUCCESS PAGE
+  // SUCCESS PAGE + STRUK
   // =========================================================
 
   if (orderSuccess) {
     return (
       <main className="checkout-page">
-        <div className="checkout-success">
+
+        {/* ===================================================
+            STYLE KHUSUS CETAK
+        =================================================== */}
+
+        <style>
+          {`
+            @media print {
+
+              @page {
+                size: A4;
+                margin: 12mm;
+              }
+
+              html,
+              body {
+                margin: 0 !important;
+                padding: 0 !important;
+                background: #ffffff !important;
+              }
+
+              body * {
+                visibility: hidden !important;
+              }
+
+              .print-receipt,
+              .print-receipt * {
+                visibility: visible !important;
+              }
+
+              .print-receipt {
+                display: block !important;
+                position: absolute !important;
+                left: 0 !important;
+                top: 0 !important;
+                width: 100% !important;
+                max-width: none !important;
+                margin: 0 !important;
+                padding: 10px !important;
+                background: #ffffff !important;
+                color: #111111 !important;
+                font-family: Arial, Helvetica, sans-serif !important;
+                box-sizing: border-box !important;
+              }
+
+              .print-receipt * {
+                box-sizing: border-box !important;
+              }
+
+              .print-receipt-header {
+                text-align: center !important;
+                border-bottom: 2px solid #111 !important;
+                padding-bottom: 14px !important;
+                margin-bottom: 18px !important;
+              }
+
+              .print-receipt-header h1 {
+                margin: 0 0 4px !important;
+                font-size: 26px !important;
+                font-weight: 800 !important;
+              }
+
+              .print-receipt-header p {
+                margin: 3px 0 !important;
+                font-size: 12px !important;
+              }
+
+              .receipt-section {
+                margin-bottom: 18px !important;
+              }
+
+              .receipt-section-title {
+                font-size: 14px !important;
+                font-weight: 700 !important;
+                margin: 0 0 8px !important;
+                padding-bottom: 5px !important;
+                border-bottom: 1px solid #ccc !important;
+              }
+
+              .receipt-info {
+                display: grid !important;
+                grid-template-columns: 150px 1fr !important;
+                gap: 5px 12px !important;
+                font-size: 12px !important;
+              }
+
+              .receipt-info span:first-child {
+                color: #555 !important;
+              }
+
+              .receipt-items {
+                width: 100% !important;
+                border-collapse: collapse !important;
+                font-size: 11px !important;
+              }
+
+              .receipt-items th,
+              .receipt-items td {
+                border-bottom: 1px solid #ddd !important;
+                padding: 8px 5px !important;
+                text-align: left !important;
+                vertical-align: top !important;
+              }
+
+              .receipt-items th {
+                font-weight: 700 !important;
+                border-top: 1px solid #111 !important;
+                border-bottom: 1px solid #111 !important;
+              }
+
+              .receipt-items .text-right {
+                text-align: right !important;
+              }
+
+              .receipt-total {
+                margin-left: auto !important;
+                width: 300px !important;
+                max-width: 100% !important;
+                font-size: 12px !important;
+              }
+
+              .receipt-total-row {
+                display: flex !important;
+                justify-content: space-between !important;
+                padding: 5px 0 !important;
+              }
+
+              .receipt-grand-total {
+                border-top: 2px solid #111 !important;
+                margin-top: 6px !important;
+                padding-top: 9px !important;
+                font-size: 16px !important;
+                font-weight: 800 !important;
+              }
+
+              .receipt-footer {
+                border-top: 1px solid #ccc !important;
+                margin-top: 25px !important;
+                padding-top: 14px !important;
+                text-align: center !important;
+                font-size: 11px !important;
+              }
+
+              .no-print {
+                display: none !important;
+              }
+            }
+
+            @media screen {
+              .print-receipt {
+                display: none;
+              }
+            }
+          `}
+        </style>
+
+        {/* ===================================================
+            TAMPILAN SUKSES WEBSITE
+        =================================================== */}
+
+        <div className="checkout-success no-print">
 
           <div className="success-icon">
             <CheckCircle2 size={48} />
@@ -1068,17 +1355,9 @@ export default function Checkout() {
               </span>
 
               <strong>
-                {orderSuccess.paymentMethod ===
-                  "bank_transfer" &&
-                  "Transfer Bank"}
-
-                {orderSuccess.paymentMethod ===
-                  "qris" &&
-                  "QRIS"}
-
-                {orderSuccess.paymentMethod ===
-                  "cod" &&
-                  "COD"}
+                {getPaymentLabel(
+                  orderSuccess.paymentMethod
+                )}
               </strong>
             </div>
 
@@ -1103,11 +1382,31 @@ export default function Checkout() {
             </div>
           )}
 
+          {/* =================================================
+              TOMBOL AKSI
+          ================================================= */}
+
           <div className="success-actions">
+
+            {/* CETAK STRUK */}
 
             <button
               type="button"
               className="btn-primary"
+              onClick={
+                handlePrintReceipt
+              }
+            >
+              <Printer size={18} />
+
+              Cetak Struk
+            </button>
+
+            {/* LIHAT PESANAN */}
+
+            <button
+              type="button"
+              className="btn-secondary"
               onClick={() =>
                 navigate(
                   `/orders/${orderSuccess.id}`
@@ -1119,6 +1418,8 @@ export default function Checkout() {
               Lihat Pesanan
             </button>
 
+            {/* LANJUT BELANJA */}
+
             <Link
               to="/products"
               className="btn-secondary"
@@ -1129,6 +1430,334 @@ export default function Checkout() {
           </div>
 
         </div>
+
+        {/* ===================================================
+            STRUK PRINT
+        =================================================== */}
+
+        <section className="print-receipt">
+
+          {/* HEADER STRUK */}
+
+          <div className="print-receipt-header">
+
+            <h1>
+              WS FASHION
+            </h1>
+
+            <p>
+              Fashion Store
+            </p>
+
+            <p>
+              Terima kasih telah berbelanja
+            </p>
+
+          </div>
+
+          {/* INFORMASI PESANAN */}
+
+          <div className="receipt-section">
+
+            <h2 className="receipt-section-title">
+              Informasi Pesanan
+            </h2>
+
+            <div className="receipt-info">
+
+              <span>
+                Nomor Pesanan
+              </span>
+
+              <strong>
+                {orderSuccess.orderNumber}
+              </strong>
+
+              <span>
+                Tanggal
+              </span>
+
+              <span>
+                {formatReceiptDate(
+                  orderSuccess.createdAt
+                )}
+              </span>
+
+              <span>
+                Status
+              </span>
+
+              <span>
+                Pesanan Pending
+              </span>
+
+              <span>
+                Pembayaran
+              </span>
+
+              <strong>
+                {getPaymentLabel(
+                  orderSuccess.paymentMethod
+                )}
+              </strong>
+
+              <span>
+                Status Pembayaran
+              </span>
+
+              <span>
+                Belum Dibayar
+              </span>
+
+            </div>
+
+          </div>
+
+          {/* DATA PENERIMA */}
+
+          <div className="receipt-section">
+
+            <h2 className="receipt-section-title">
+              Data Penerima
+            </h2>
+
+            <div className="receipt-info">
+
+              <span>
+                Nama
+              </span>
+
+              <strong>
+                {orderSuccess.customer?.name ||
+                  "-"}
+              </strong>
+
+              <span>
+                WhatsApp
+              </span>
+
+              <span>
+                {orderSuccess.customer?.phone ||
+                  "-"}
+              </span>
+
+              <span>
+                Alamat
+              </span>
+
+              <span>
+                {orderSuccess.customer?.address ||
+                  "-"}
+              </span>
+
+            </div>
+
+          </div>
+
+          {/* DAFTAR PRODUK */}
+
+          <div className="receipt-section">
+
+            <h2 className="receipt-section-title">
+              Detail Produk
+            </h2>
+
+            <table className="receipt-items">
+
+              <thead>
+
+                <tr>
+
+                  <th>
+                    Produk
+                  </th>
+
+                  <th>
+                    Detail
+                  </th>
+
+                  <th className="text-right">
+                    Harga
+                  </th>
+
+                  <th className="text-right">
+                    Qty
+                  </th>
+
+                  <th className="text-right">
+                    Total
+                  </th>
+
+                </tr>
+
+              </thead>
+
+              <tbody>
+
+                {orderSuccess.items?.map(
+                  (item, index) => {
+
+                    const detail = [
+                      item.selectedSize
+                        ? `Size: ${item.selectedSize}`
+                        : "",
+
+                      item.selectedColor
+                        ? `Warna: ${item.selectedColor}`
+                        : "",
+                    ]
+                      .filter(Boolean)
+                      .join(" • ");
+
+                    const itemTotal =
+                      Number(
+                        item.price || 0
+                      ) *
+                      Number(
+                        item.quantity || 0
+                      );
+
+                    return (
+                      <tr
+                        key={
+                          item.id ??
+                          index
+                        }
+                      >
+
+                        <td>
+                          <strong>
+                            {item.productName}
+                          </strong>
+                        </td>
+
+                        <td>
+                          {detail || "-"}
+                        </td>
+
+                        <td className="text-right">
+                          {formatRupiah(
+                            item.price
+                          )}
+                        </td>
+
+                        <td className="text-right">
+                          {item.quantity}
+                        </td>
+
+                        <td className="text-right">
+                          <strong>
+                            {formatRupiah(
+                              itemTotal
+                            )}
+                          </strong>
+                        </td>
+
+                      </tr>
+                    );
+                  }
+                )}
+
+              </tbody>
+
+            </table>
+
+          </div>
+
+          {/* TOTAL */}
+
+          <div className="receipt-total">
+
+            <div className="receipt-total-row">
+
+              <span>
+                Subtotal
+              </span>
+
+              <strong>
+                {formatRupiah(
+                  orderSuccess.subtotal
+                )}
+              </strong>
+
+            </div>
+
+            <div className="receipt-total-row">
+
+              <span>
+                Ongkir
+              </span>
+
+              <strong>
+                {orderSuccess.shippingCost ===
+                0
+                  ? "Gratis"
+                  : formatRupiah(
+                      orderSuccess.shippingCost
+                    )}
+              </strong>
+
+            </div>
+
+            <div className="receipt-total-row receipt-grand-total">
+
+              <span>
+                TOTAL
+              </span>
+
+              <strong>
+                {formatRupiah(
+                  orderSuccess.total
+                )}
+              </strong>
+
+            </div>
+
+          </div>
+
+          {/* CATATAN */}
+
+          {orderSuccess.customer?.notes && (
+            <div className="receipt-section">
+
+              <h2 className="receipt-section-title">
+                Catatan Pesanan
+              </h2>
+
+              <p
+                style={{
+                  fontSize: "12px",
+                  margin: 0,
+                }}
+              >
+                {orderSuccess.customer.notes}
+              </p>
+
+            </div>
+          )}
+
+          {/* FOOTER */}
+
+          <div className="receipt-footer">
+
+            <strong>
+              WS FASHION
+            </strong>
+
+            <p>
+              Terima kasih telah berbelanja
+              bersama kami.
+            </p>
+
+            <p>
+              Simpan struk ini sebagai
+              bukti pesanan.
+            </p>
+
+          </div>
+
+        </section>
+
       </main>
     );
   }
@@ -1320,11 +1949,14 @@ export default function Checkout() {
               <div className="form-group">
 
                 <label htmlFor="notes">
+
                   Catatan Pesanan
+
                   <span>
                     {" "}
                     (opsional)
                   </span>
+
                 </label>
 
                 <textarea
